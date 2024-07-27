@@ -180,10 +180,10 @@ const ProjectManagementGame = () => {
   };
 
   const formatTime = (seconds) => {
-    const days = Math.floor(seconds / 1440);
-    const hours = Math.floor((seconds % 1440) / 60);
-    const minutes = seconds % 60;
-    return `${days} days, ${hours} hours, ${minutes} minutes`;
+    const days = Math.floor(seconds / 60);
+    const hours = Math.floor((seconds % 60) / 2.5);
+    const minutes = Math.floor(((seconds % 60) % 2.5) * 24);
+    return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}, ${minutes} minute${minutes !== 1 ? 's' : ''}`;
   };
 
   return (
