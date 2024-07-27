@@ -74,6 +74,23 @@ const ProjectManagementGame = () => {
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setStopwatchTime((prevTime) => prevTime + 1);
+
+      // Update ongoing tickets
+      Object.values(roles).forEach((roleList) => {
+        roleList.forEach((role) => {
+          const completedTickets = [];
+          role.ongoingTickets = role.ongoingTickets.map((ticket) => {
+            if (ticket.remainingTime > 1) {
+              return { ...ticket, remainingTime: ticket.remainingTime - 1 };
+            } else {
+              completedTickets.push(ticket);
+              return null;
+            }
+          }).filter(ticket => ticket !== null);
+          role.completedTickets.push(...completedTickets);
+        });
+      });
+
     }, 1000);
 
     return () => clearInterval(timerRef.current);
@@ -100,6 +117,7 @@ const ProjectManagementGame = () => {
     ];
     const newTicket = tickets[Math.floor(Math.random() * tickets.length)];
     newTicket.id = Math.random().toString(36).substr(2, 9);
+    newTicket.remainingTime = newTicket.time;
     setCurrentTicket(newTicket);
     setTimeLeft(60);
   };
@@ -123,6 +141,7 @@ const ProjectManagementGame = () => {
       generateNewTicket();
     } else if (ticket.role === role.name && role.ongoingTickets.length < role.load && ticket.difficulty > role.maxDifficulty) {
       ticket.time = ticket.time * 1.5; // Junior needs more time for higher difficulty
+      ticket.remainingTime = ticket.time;
       role.ongoingTickets.push(ticket);
       setScore((prevScore) => prevScore + 5);
       generateNewTicket();
@@ -160,12 +179,6 @@ const ProjectManagementGame = () => {
     }
   };
 
-  const handleRoleClick = (role) => {
-    const ongoingTickets = role.ongoingTickets.map(ticket => `${ticket.title} (Priority: ${ticket.priority}, Difficulty: ${ticket.difficulty})`).join('\n');
-    const completedTickets = role.completedTickets.map(ticket => `${ticket.title} (Priority: ${ticket.priority}, Difficulty: ${ticket.difficulty})`).join('\n');
-    alert(`Ongoing Tickets:\n${ongoingTickets}\n\nCompleted Tickets:\n${completedTickets}`);
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <header style={{ backgroundColor: '#f3f4f6', padding: '1rem' }}>
@@ -184,7 +197,6 @@ const ProjectManagementGame = () => {
               onChange={(e) => setIsPracticeMode(e.target.checked)}
             />
           </div>
-          <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>Stopwatch: {stopwatchTime}s</span>
         </div>
       </header>
       <main style={{ display: 'flex', flex: 1 }}>
@@ -212,6 +224,7 @@ const ProjectManagementGame = () => {
                 <span style={{ marginLeft: '0.5rem' }}>Allocated Time: {currentTicket.time / 60} days</span>
                 <span style={{ marginLeft: '0.5rem' }}>Time Left: {timeLeft}s</span>
               </div>
+              <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Stopwatch: {stopwatchTime}s</div>
             </div>
           )}
         </aside>
@@ -252,7 +265,6 @@ const ProjectManagementGame = () => {
                     onDragLeave={handleDragLeave}
                     onMouseEnter={() => handleRoleHover(role.name)}
                     onMouseLeave={() => handleRoleHover(null)}
-                    onClick={() => handleRoleClick(role)}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -268,6 +280,22 @@ const ProjectManagementGame = () => {
                         <ul style={{ fontSize: '0.75rem', listStyleType: 'disc', paddingLeft: '1rem' }}>
                           {role.skills.map((skill, index) => (
                             <li key={index}>{skill}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>Ongoing Tickets:</p>
+                        <ul style={{ fontSize: '0.75rem', listStyleType: 'disc', paddingLeft: '1rem' }}>
+                          {role.ongoingTickets.map((ticket, index) => (
+                            <li key={index}>{ticket.title} ({ticket.remainingTime / 60} days left)</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>Completed Tickets:</p>
+                        <ul style={{ fontSize: '0.75rem', listStyleType: 'disc', paddingLeft: '1rem' }}>
+                          {role.completedTickets.map((ticket, index) => (
+                            <li key={index}>{ticket.title}</li>
                           ))}
                         </ul>
                       </div>
