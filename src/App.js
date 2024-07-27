@@ -21,7 +21,7 @@ const roles = {
 
 const ProjectManagementGame = () => {
   const [score, setScore] = useState(0);
-  const [progress, setProgress] = useState({ red: 0, yellow: 0, green: 0 });
+  const [progress, setProgress] = useState(0);
   const [currentTicket, setCurrentTicket] = useState(null);
   const [companyDetails, setCompanyDetails] = useState('');
   const [highlightedRole, setHighlightedRole] = useState(null);
@@ -29,23 +29,6 @@ const ProjectManagementGame = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const timerRef = useRef();
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prevProgress) => {
-        const total = prevProgress.red + prevProgress.yellow + prevProgress.green;
-        if (total >= 100) {
-          clearInterval(timer);
-          return prevProgress;
-        }
-        if (total < 33) return { ...prevProgress, red: prevProgress.red + 1 };
-        if (total < 66) return { ...prevProgress, yellow: prevProgress.yellow + 1 };
-        return { ...prevProgress, green: prevProgress.green + 1 };
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     if (!currentTicket) {
@@ -75,10 +58,22 @@ const ProjectManagementGame = () => {
         });
       });
 
+      // Update progress
+      const totalTickets = Object.values(roles).reduce((total, roleList) => total + roleList.reduce((roleTotal, role) => roleTotal + role.completedTickets.length + role.ongoingTickets.length, 0), 0);
+      const completedTickets = Object.values(roles).reduce((total, roleList) => total + roleList.reduce((roleTotal, role) => roleTotal + role.completedTickets.length, 0), 0);
+      const progressPercentage = totalTickets === 0 ? 0 : (completedTickets / totalTickets) * 100;
+      setProgress(progressPercentage);
+
+      // Check current ticket
+      if (currentTicket && currentTicket.remainingTime <= 0) {
+        setScore((prevScore) => prevScore - 5);
+        generateNewTicket();
+      }
+
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, []);
+  }, [currentTicket]);
 
   const generateCompanyDetails = () => {
     const companies = [
@@ -179,9 +174,7 @@ const ProjectManagementGame = () => {
       <header style={{ backgroundColor: '#f3f4f6', padding: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ width: '100%', height: '1rem', backgroundColor: '#e5e7eb', borderRadius: '9999px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', backgroundColor: '#ef4444', width: `${progress.red}%`, float: 'left' }}></div>
-            <div style={{ height: '100%', backgroundColor: '#eab308', width: `${progress.yellow}%`, float: 'left' }}></div>
-            <div style={{ height: '100%', backgroundColor: '#22c55e', width: `${progress.green}%`, float: 'left' }}></div>
+            <div style={{ height: '100%', backgroundColor: '#22c55e', width: `${progress}%` }}></div>
           </div>
           <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>Score: {score}</span>
           <div style={{ display: 'flex', alignItems: 'center', marginLeft: '1rem' }}>
@@ -219,7 +212,7 @@ const ProjectManagementGame = () => {
                 <span style={{ marginLeft: '0.5rem' }}>Allocated Time: {currentTicket.time / 60} days</span>
               </div>
               <div>
-              <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
+                <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
               </div>
             </div>
           )}
