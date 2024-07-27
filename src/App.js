@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import CountdownTimer from './CountdownTimer';
 
 const roles = {
   Development: [
@@ -22,12 +23,10 @@ const ProjectManagementGame = () => {
   const [score, setScore] = useState(0);
   const [progress, setProgress] = useState({ red: 0, yellow: 0, green: 0 });
   const [currentTicket, setCurrentTicket] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(60);
   const [companyDetails, setCompanyDetails] = useState('');
   const [highlightedRole, setHighlightedRole] = useState(null);
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [stopwatchTime, setStopwatchTime] = useState(0);
 
   const timerRef = useRef();
 
@@ -52,19 +51,6 @@ const ProjectManagementGame = () => {
     if (!currentTicket) {
       generateNewTicket();
     }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 0) {
-          setScore((prevScore) => prevScore - 5);
-          generateNewTicket();
-          return 60;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
   }, [currentTicket]);
 
   useEffect(() => {
@@ -73,8 +59,6 @@ const ProjectManagementGame = () => {
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
-      setStopwatchTime((prevTime) => prevTime + 1);
-
       // Update ongoing tickets
       Object.values(roles).forEach((roleList) => {
         roleList.forEach((role) => {
@@ -119,7 +103,6 @@ const ProjectManagementGame = () => {
     newTicket.id = Math.random().toString(36).substr(2, 9);
     newTicket.remainingTime = newTicket.time;
     setCurrentTicket(newTicket);
-    setTimeLeft(60);
   };
 
   const handleDragStart = (e, ticket) => {
@@ -186,6 +169,11 @@ const ProjectManagementGame = () => {
     return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}, ${minutes} minute${minutes !== 1 ? 's' : ''}`;
   };
 
+  const handleTimeUp = () => {
+    setScore((prevScore) => prevScore - 5);
+    generateNewTicket();
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <header style={{ backgroundColor: '#f3f4f6', padding: '1rem' }}>
@@ -230,7 +218,9 @@ const ProjectManagementGame = () => {
                 <span style={{ marginLeft: '0.5rem' }}>Difficulty: {currentTicket.difficulty}</span>
                 <span style={{ marginLeft: '0.5rem' }}>Allocated Time: {currentTicket.time / 60} days</span>
               </div>
-              <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Stopwatch: {stopwatchTime}s</div>
+              <div>
+              <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
+              </div>
             </div>
           )}
         </aside>
