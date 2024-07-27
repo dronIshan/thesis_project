@@ -179,6 +179,13 @@ const ProjectManagementGame = () => {
     }
   };
 
+  const formatTime = (seconds) => {
+    const days = Math.floor(seconds / 1440);
+    const hours = Math.floor((seconds % 1440) / 60);
+    const minutes = seconds % 60;
+    return `${days} days, ${hours} hours, ${minutes} minutes`;
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <header style={{ backgroundColor: '#f3f4f6', padding: '1rem' }}>
@@ -222,7 +229,6 @@ const ProjectManagementGame = () => {
                 <span style={{ marginLeft: '0.5rem' }}>Priority: {currentTicket.priority}</span>
                 <span style={{ marginLeft: '0.5rem' }}>Difficulty: {currentTicket.difficulty}</span>
                 <span style={{ marginLeft: '0.5rem' }}>Allocated Time: {currentTicket.time / 60} days</span>
-                <span style={{ marginLeft: '0.5rem' }}>Time Left: {timeLeft}s</span>
               </div>
               <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Stopwatch: {stopwatchTime}s</div>
             </div>
@@ -287,7 +293,7 @@ const ProjectManagementGame = () => {
                         <p style={{ fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>Ongoing Tickets:</p>
                         <ul style={{ fontSize: '0.75rem', listStyleType: 'disc', paddingLeft: '1rem' }}>
                           {role.ongoingTickets.map((ticket, index) => (
-                            <li key={index}>{ticket.title} ({ticket.remainingTime / 60} days left)</li>
+                            <li key={index}>{ticket.title} ({formatTime(ticket.remainingTime)})</li>
                           ))}
                         </ul>
                       </div>
