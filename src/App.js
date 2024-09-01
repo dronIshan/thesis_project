@@ -19,7 +19,7 @@ const roles = {
   ]
 };
 
-const ProjectManagementGame = () => {
+const ProjectSimulationGame = () => {
   const [score, setScore] = useState(0);
   const [progress, setProgress] = useState(0);
   const [currentTicket, setCurrentTicket] = useState(null);
@@ -300,4 +300,4 @@ const ProjectManagementGame = () => {
   );
 };
 
-export default ProjectManagementGame;
+export default ProjectSimulationGame;
