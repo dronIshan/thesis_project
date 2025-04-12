@@ -4,6 +4,7 @@ import EmotionFace from './EmotionFace';
 import PDMatchingGame from './PDMatchingGame';
 import StatsPopup from './StatsPopup';
 
+// Roles object with four categories
 const roles = {
   Development: [
     {
@@ -76,6 +77,19 @@ const roles = {
       ongoingTickets: [],
       completedTickets: []
     }
+  ],
+  Database: [
+    {
+      name: 'Database Administrator',
+      icon: '🗄️',
+      experience: 6,
+      skills: ['SQL', 'Performance Tuning', 'Indexing', 'Backup & Recovery'],
+      role: 'senior',
+      load: 2,
+      maxDifficulty: 4,
+      ongoingTickets: [],
+      completedTickets: []
+    }
   ]
 };
 
@@ -93,7 +107,7 @@ const ProjectSimulationGame = () => {
   // EXTRA FEATURES: Stats and game completion tracking
   const [falseSelections, setFalseSelections] = useState(0);
   const [correctAssignments, setCorrectAssignments] = useState(0);
-  const [decisionTimes, setDecisionTimes] = useState([]); // stores decision time in milliseconds
+  const [decisionTimes, setDecisionTimes] = useState([]); // decision time in ms
   const [isGameComplete, setIsGameComplete] = useState(false);
 
   const timerRef = useRef();
@@ -102,7 +116,7 @@ const ProjectSimulationGame = () => {
     setIsPdChallengeComplete(true);
   };
 
-  // Generate a new ticket if none exists
+  // Generate a new ticket if none exists.
   useEffect(() => {
     if (!currentTicket) {
       generateNewTicket();
@@ -113,10 +127,10 @@ const ProjectSimulationGame = () => {
     generateCompanyDetails();
   }, []);
 
-  // Timer interval to update ticket timers and progress, and check for game completion.
+  // Timer logic to update ticket timers and progress
   useEffect(() => {
     timerRef.current = setInterval(() => {
-      // Update remaining time for ongoing tickets
+      // Update remaining time for all ongoing tickets in each role
       Object.values(roles).forEach((roleList) => {
         roleList.forEach((role) => {
           const completedTickets = [];
@@ -148,10 +162,7 @@ const ProjectSimulationGame = () => {
       const completedTicketsCount = Object.values(roles).reduce(
         (total, roleList) =>
           total +
-          roleList.reduce(
-            (roleTotal, role) => roleTotal + role.completedTickets.length,
-            0
-          ),
+          roleList.reduce((roleTotal, role) => roleTotal + role.completedTickets.length, 0),
         0
       );
 
@@ -164,7 +175,7 @@ const ProjectSimulationGame = () => {
         clearInterval(timerRef.current);
       }
 
-      // If the current ticket expires, log decision time, penalize score, and generate a new ticket.
+      // Ticket expiration: If current ticket's time runs out
       if (currentTicket && currentTicket.remainingTime <= 0) {
         setScore(prevScore => prevScore - 5);
         const decisionTime = Date.now() - currentTicket.startTime;
@@ -187,21 +198,39 @@ const ProjectSimulationGame = () => {
     setCompanyDetails(companies[Math.floor(Math.random() * companies.length)]);
   };
 
-  // Create a new ticket and attach a startTime property for decision timing.
+  // Updated generateNewTicket function with more tickets and ones that can be done by any role.
   const generateNewTicket = () => {
+    const allAllowedRoles = [
+      'Backend Developer',
+      'Backend Developer Intern',
+      'Project Manager',
+      'Product Owner',
+      'UX/UI Designer',
+      'Graphic Designer',
+      'Database Administrator'
+    ];
+
     const tickets = [
       {
         title: 'Implement user authentication',
         description: 'Create a secure login system for the application.',
-        role: 'Backend Developer',
+        roles: ['Backend Developer'], // Only senior backend developer
         priority: 'High',
         difficulty: 4,
         time: 60
       },
       {
+        title: 'Develop code documentation',
+        description: 'Write clear technical documentation for the API.',
+        roles: ['Backend Developer Intern','Backend Developer'], // anyone in backend
+        priority: 'Medium',
+        difficulty: 2,
+        time: 30
+      },
+      {
         title: 'Optimize database queries',
-        description: 'Improve the performance of SQL queries for faster data retrieval.',
-        role: 'Backend Developer',
+        description: 'Improve SQL query performance for faster data retrieval.',
+        roles: ['Database Administrator'], // Only DBA
         priority: 'Medium',
         difficulty: 3,
         time: 45
@@ -209,37 +238,77 @@ const ProjectSimulationGame = () => {
       {
         title: 'Design responsive UI',
         description: 'Create a mobile-friendly interface for the dashboard.',
-        role: 'UX/UI Designer',
+        roles: ['UX/UI Designer'], // Only UI designer
         priority: 'Low',
         difficulty: 2,
         time: 30
       },
       {
-        title: 'Integrate payment gateway',
-        description: 'Add support for multiple payment methods in the checkout process.',
-        role: 'Backend Developer',
-        priority: 'High',
-        difficulty: 5,
-        time: 75
-      },
-      {
-        title: 'Implement real-time notifications',
-        description: 'Set up WebSocket connections for instant updates.',
-        role: 'Backend Developer',
+        title: 'Create graphic assets for the app',
+        description: 'Design icons and illustrations for the application.',
+        roles: ['Graphic Designer'], // Only graphic designer
         priority: 'Medium',
         difficulty: 3,
+        time: 40
+      },
+      {
+        title: 'Set up project roadmap',
+        description: 'Outline project timeline and key milestones.',
+        roles: ['Project Manager'], // Only project manager
+        priority: 'High',
+        difficulty: 4,
+        time: 70
+      },
+      {
+        title: 'Define user stories and requirements',
+        description: 'Gather and document product requirements for the team.',
+        roles: ['Product Owner'], // Only product owner
+        priority: 'High',
+        difficulty: 4,
         time: 60
+      },
+      {
+        title: 'Implement caching mechanism',
+        description: 'Add caching to optimize application performance.',
+        roles: ['Backend Developer', 'Backend Developer Intern'], // Either type can do
+        priority: 'Medium',
+        difficulty: 3,
+        time: 50
+      },
+      {
+        title: 'Improve UI accessibility',
+        description: 'Enhance the UI for better accessibility.',
+        roles: ['UX/UI Designer'],
+        priority: 'Medium',
+        difficulty: 3,
+        time: 35
+      },
+      // Tickets that can be done by ANY role:
+      {
+        title: 'Attend company meeting',
+        description: 'Participate in the weekly company meeting and share updates.',
+        roles: allAllowedRoles,
+        priority: 'Low',
+        difficulty: 1,
+        time: 20
+      },
+      {
+        title: 'Perform system maintenance',
+        description: 'Conduct routine maintenance and updates for the entire system.',
+        roles: allAllowedRoles,
+        priority: 'Low',
+        difficulty: 2,
+        time: 50
       }
     ];
     const newTicket = tickets[Math.floor(Math.random() * tickets.length)];
     newTicket.id = Math.random().toString(36).substr(2, 9);
     newTicket.remainingTime = newTicket.time;
-    newTicket.startTime = Date.now(); // EXTRA: mark start time for decision tracking
+    newTicket.startTime = Date.now(); // Mark start time for decision tracking
     setCurrentTicket(newTicket);
   };
 
   // Drag-and-drop handlers
-
   const handleDragStart = (e, ticket) => {
     e.dataTransfer.setData('text/plain', JSON.stringify(ticket));
     setIsDragging(true);
@@ -250,16 +319,15 @@ const ProjectSimulationGame = () => {
     setHighlightedRole(null);
   };
 
-  // When a ticket is dropped on a role, record decision time and update stats.
+  // When a ticket is dropped on a role, check if role.name is allowed via ticket.roles array.
   const handleDrop = (e, role) => {
     e.preventDefault();
     const ticket = JSON.parse(e.dataTransfer.getData('text'));
     const decisionTime = Date.now() - ticket.startTime;
-    // Record the decision time
     setDecisionTimes(prev => [...prev, decisionTime]);
 
     if (
-      ticket.role === role.name &&
+      ticket.roles.includes(role.name) &&
       role.ongoingTickets.length < role.load &&
       ticket.difficulty <= role.maxDifficulty
     ) {
@@ -268,11 +336,10 @@ const ProjectSimulationGame = () => {
       setCorrectAssignments(prev => prev + 1);
       generateNewTicket();
     } else if (
-      ticket.role === role.name &&
+      ticket.roles.includes(role.name) &&
       role.ongoingTickets.length < role.load &&
       ticket.difficulty > role.maxDifficulty
     ) {
-      // If the ticket's difficulty exceeds the role's max but still accepted, apply a time penalty.
       ticket.time = ticket.time * 1.5;
       ticket.remainingTime = ticket.time;
       role.ongoingTickets.push(ticket);
@@ -306,16 +373,16 @@ const ProjectSimulationGame = () => {
     }
   };
 
-  // Highlight the correct role when practice mode is enabled
+  // When practice mode is enabled, highlight the first allowed role.
   const handleTicketHover = (isHovering) => {
     if (isPracticeMode && isHovering && currentTicket) {
-      setHighlightedRole(currentTicket.role);
+      setHighlightedRole(currentTicket.roles[0]);
     } else if (isPracticeMode && !isHovering) {
       setHighlightedRole(null);
     }
   };
 
-  // Format seconds into a human-readable string
+  // Format seconds into a human-readable string.
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / 60);
     const hours = Math.floor((seconds % 60) / 2.5);
@@ -323,7 +390,7 @@ const ProjectSimulationGame = () => {
     return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}, ${minutes} minute${minutes !== 1 ? 's' : ''}`;
   };
 
-  // When the timer for the current ticket runs out, penalize and generate a new ticket.
+  // When the current ticket's timer runs out, record decision time, penalize, and generate a new ticket.
   const handleTimeUp = () => {
     setScore(prevScore => prevScore - 5);
     const dt = Date.now() - currentTicket.startTime;
@@ -331,7 +398,7 @@ const ProjectSimulationGame = () => {
     generateNewTicket();
   };
 
-  // Determine emotion based on the number of ongoing tickets
+  // Determine emotion to display based on the number of ongoing tickets.
   const getEmotion = (role) => {
     const ticketCount = role.ongoingTickets.length;
     if (ticketCount === 0) return 'happy';
@@ -341,12 +408,12 @@ const ProjectSimulationGame = () => {
     return 'neutral';
   };
 
-  // If the product design (PD) matching challenge isn't complete, render that first.
+  // If the PD matching challenge isn't complete, render it first.
   if (!isPdChallengeComplete) {
     return <PDMatchingGame onComplete={handlePdGameComplete} />;
   }
 
-  // When the game is complete (i.e. progress reaches 100%), render the separate StatsPopup.
+  // When game is complete (progress reaches 100%), render the separate StatsPopup.
   if (isGameComplete) {
     return (
       <StatsPopup
@@ -370,7 +437,11 @@ const ProjectSimulationGame = () => {
           <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>Score: {score}</span>
           <div style={{ display: 'flex', alignItems: 'center', marginLeft: '1rem' }}>
             <span style={{ marginRight: '0.5rem' }}>Practice Mode</span>
-            <input type="checkbox" checked={isPracticeMode} onChange={(e) => setIsPracticeMode(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={isPracticeMode}
+              onChange={(e) => setIsPracticeMode(e.target.checked)}
+            />
           </div>
         </div>
       </header>
@@ -401,7 +472,7 @@ const ProjectSimulationGame = () => {
               <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center' }}>
                 <span style={{ marginLeft: '0.5rem' }}>Priority: {currentTicket.priority}</span>
                 <span style={{ marginLeft: '0.5rem' }}>Difficulty: {currentTicket.difficulty}</span>
-                <span style={{ marginLeft: '0.5rem' }}>Allocated Time: {currentTicket.time / 60} days</span>
+                <span style={{ marginLeft: '0.5rem' }}>Allocated Time: {(currentTicket.time / 60).toFixed(2)}days</span>
               </div>
               <div>
                 <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
@@ -409,10 +480,16 @@ const ProjectSimulationGame = () => {
             </div>
           )}
         </aside>
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', padding: '1rem' }}>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', padding: '1rem' }}>
           {Object.entries(roles).map(([category, rolesList]) => (
             <div key={category} style={{ overflowY: 'auto', maxHeight: '80vh' }}>
-              <h2 style={{ textAlign: 'center', fontWeight: 'bold', padding: '0.5rem', backgroundColor: '#f3f4f6', marginBottom: '1rem' }}>
+              <h2 style={{
+                textAlign: 'center',
+                fontWeight: 'bold',
+                padding: '0.5rem',
+                backgroundColor: '#f3f4f6',
+                marginBottom: '1rem'
+              }}>
                 {category}
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
