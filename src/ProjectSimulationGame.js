@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import CountdownTimer from './CountdownTimer';
 import EmotionFace from './EmotionFace';
 import PDMatchingGame from './PDMatchingGame';
+import StatsPopup from './StatsPopup';
 
 const roles = {
   Development: [
@@ -79,6 +80,7 @@ const roles = {
 };
 
 const ProjectSimulationGame = () => {
+  // Existing state variables
   const [score, setScore] = useState(0);
   const [progress, setProgress] = useState(0);
   const [currentTicket, setCurrentTicket] = useState(null);
@@ -88,12 +90,19 @@ const ProjectSimulationGame = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isPdChallengeComplete, setIsPdChallengeComplete] = useState(false);
 
+  // EXTRA FEATURES: Stats and game completion tracking
+  const [falseSelections, setFalseSelections] = useState(0);
+  const [correctAssignments, setCorrectAssignments] = useState(0);
+  const [decisionTimes, setDecisionTimes] = useState([]); // stores decision time in milliseconds
+  const [isGameComplete, setIsGameComplete] = useState(false);
+
   const timerRef = useRef();
 
   const handlePdGameComplete = () => {
     setIsPdChallengeComplete(true);
   };
 
+  // Generate a new ticket if none exists
   useEffect(() => {
     if (!currentTicket) {
       generateNewTicket();
@@ -104,8 +113,10 @@ const ProjectSimulationGame = () => {
     generateCompanyDetails();
   }, []);
 
+  // Timer interval to update ticket timers and progress, and check for game completion.
   useEffect(() => {
     timerRef.current = setInterval(() => {
+      // Update remaining time for ongoing tickets
       Object.values(roles).forEach((roleList) => {
         roleList.forEach((role) => {
           const completedTickets = [];
@@ -134,7 +145,7 @@ const ProjectSimulationGame = () => {
         0
       );
 
-      const completedTickets = Object.values(roles).reduce(
+      const completedTicketsCount = Object.values(roles).reduce(
         (total, roleList) =>
           total +
           roleList.reduce(
@@ -144,11 +155,20 @@ const ProjectSimulationGame = () => {
         0
       );
 
-      const progressPercentage = totalTickets === 0 ? 0 : (completedTickets / totalTickets) * 100;
+      const progressPercentage = totalTickets === 0 ? 0 : (completedTicketsCount / totalTickets) * 100;
       setProgress(progressPercentage);
 
+      // End game when progress reaches 100%
+      if (progressPercentage === 100) {
+        setIsGameComplete(true);
+        clearInterval(timerRef.current);
+      }
+
+      // If the current ticket expires, log decision time, penalize score, and generate a new ticket.
       if (currentTicket && currentTicket.remainingTime <= 0) {
         setScore(prevScore => prevScore - 5);
+        const decisionTime = Date.now() - currentTicket.startTime;
+        setDecisionTimes(prev => [...prev, decisionTime]);
         generateNewTicket();
       }
     }, 1000);
@@ -167,6 +187,7 @@ const ProjectSimulationGame = () => {
     setCompanyDetails(companies[Math.floor(Math.random() * companies.length)]);
   };
 
+  // Create a new ticket and attach a startTime property for decision timing.
   const generateNewTicket = () => {
     const tickets = [
       {
@@ -213,8 +234,11 @@ const ProjectSimulationGame = () => {
     const newTicket = tickets[Math.floor(Math.random() * tickets.length)];
     newTicket.id = Math.random().toString(36).substr(2, 9);
     newTicket.remainingTime = newTicket.time;
+    newTicket.startTime = Date.now(); // EXTRA: mark start time for decision tracking
     setCurrentTicket(newTicket);
   };
+
+  // Drag-and-drop handlers
 
   const handleDragStart = (e, ticket) => {
     e.dataTransfer.setData('text/plain', JSON.stringify(ticket));
@@ -226,9 +250,14 @@ const ProjectSimulationGame = () => {
     setHighlightedRole(null);
   };
 
+  // When a ticket is dropped on a role, record decision time and update stats.
   const handleDrop = (e, role) => {
     e.preventDefault();
     const ticket = JSON.parse(e.dataTransfer.getData('text'));
+    const decisionTime = Date.now() - ticket.startTime;
+    // Record the decision time
+    setDecisionTimes(prev => [...prev, decisionTime]);
+
     if (
       ticket.role === role.name &&
       role.ongoingTickets.length < role.load &&
@@ -236,19 +265,23 @@ const ProjectSimulationGame = () => {
     ) {
       role.ongoingTickets.push(ticket);
       setScore(prevScore => prevScore + 10);
+      setCorrectAssignments(prev => prev + 1);
       generateNewTicket();
     } else if (
       ticket.role === role.name &&
       role.ongoingTickets.length < role.load &&
       ticket.difficulty > role.maxDifficulty
     ) {
+      // If the ticket's difficulty exceeds the role's max but still accepted, apply a time penalty.
       ticket.time = ticket.time * 1.5;
       ticket.remainingTime = ticket.time;
       role.ongoingTickets.push(ticket);
       setScore(prevScore => prevScore + 5);
+      setCorrectAssignments(prev => prev + 1);
       generateNewTicket();
     } else {
       setScore(prevScore => prevScore - 5);
+      setFalseSelections(prev => prev + 1);
     }
     setIsDragging(false);
     setHighlightedRole(null);
@@ -273,6 +306,7 @@ const ProjectSimulationGame = () => {
     }
   };
 
+  // Highlight the correct role when practice mode is enabled
   const handleTicketHover = (isHovering) => {
     if (isPracticeMode && isHovering && currentTicket) {
       setHighlightedRole(currentTicket.role);
@@ -281,6 +315,7 @@ const ProjectSimulationGame = () => {
     }
   };
 
+  // Format seconds into a human-readable string
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / 60);
     const hours = Math.floor((seconds % 60) / 2.5);
@@ -288,11 +323,15 @@ const ProjectSimulationGame = () => {
     return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}, ${minutes} minute${minutes !== 1 ? 's' : ''}`;
   };
 
+  // When the timer for the current ticket runs out, penalize and generate a new ticket.
   const handleTimeUp = () => {
     setScore(prevScore => prevScore - 5);
+    const dt = Date.now() - currentTicket.startTime;
+    setDecisionTimes(prev => [...prev, dt]);
     generateNewTicket();
   };
 
+  // Determine emotion based on the number of ongoing tickets
   const getEmotion = (role) => {
     const ticketCount = role.ongoingTickets.length;
     if (ticketCount === 0) return 'happy';
@@ -302,10 +341,25 @@ const ProjectSimulationGame = () => {
     return 'neutral';
   };
 
+  // If the product design (PD) matching challenge isn't complete, render that first.
   if (!isPdChallengeComplete) {
     return <PDMatchingGame onComplete={handlePdGameComplete} />;
   }
 
+  // When the game is complete (i.e. progress reaches 100%), render the separate StatsPopup.
+  if (isGameComplete) {
+    return (
+      <StatsPopup
+        score={score}
+        correctAssignments={correctAssignments}
+        falseSelections={falseSelections}
+        decisionTimes={decisionTimes}
+        onRestart={() => window.location.reload()}
+      />
+    );
+  }
+
+  // Main game UI
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <header style={{ backgroundColor: '#f3f4f6', padding: '1rem' }}>
@@ -376,9 +430,7 @@ const ProjectSimulationGame = () => {
                         role.ongoingTickets.length >= role.load && isDragging
                           ? '#ef4444'
                           : highlightedRole === role.name
-                          ? isDragging
-                            ? '#d1fae5'
-                            : '#fef3c7'
+                          ? isDragging ? '#d1fae5' : '#fef3c7'
                           : 'white',
                       borderColor:
                         highlightedRole === role.name && isDragging
