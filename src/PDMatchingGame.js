@@ -1,4 +1,13 @@
+// PDMatchingGame.js
 import React, { useState, useEffect, useMemo } from 'react';
+
+// Fisher–Yates (Durstenfeld) shuffle in-place
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
 
 const PDMatchingGame = ({ onComplete }) => {
   const [selectedRequirement, setSelectedRequirement] = useState(null);
@@ -9,13 +18,13 @@ const PDMatchingGame = ({ onComplete }) => {
   const [message, setMessage] = useState('Select a stakeholder requirement to begin');
   const [incorrectSelection, setIncorrectSelection] = useState(null);
 
-  // For stats:
+  // For stats
   const [startTime, setStartTime] = useState(null);
   const [falseMatches, setFalseMatches] = useState(0);
 
-  // Wrap these arrays in useMemo to avoid re-creating them on every render
-  const stakeholderRequirements = useMemo(
-    () => [
+  // We define + shuffle the stakeholder requirements
+  const stakeholderRequirements = useMemo(() => {
+    const arr = [
       {
         id: 1,
         requirement: "We need a way for users to securely log into their accounts",
@@ -41,12 +50,14 @@ const PDMatchingGame = ({ onComplete }) => {
         requirement: "Users want to know immediately when someone messages them",
         correctMatch: "Implement real-time notifications"
       }
-    ],
-    []
-  );
+    ];
+    shuffle(arr); // randomize in place
+    return arr;
+  }, []);
 
-  const technicalTickets = useMemo(
-    () => [
+  // We define + shuffle the technical tickets
+  const technicalTickets = useMemo(() => {
+    const arr = [
       {
         title: 'Implement user authentication',
         description: 'Create a secure login system for the application.',
@@ -87,11 +98,12 @@ const PDMatchingGame = ({ onComplete }) => {
         difficulty: 3,
         time: 60
       }
-    ],
-    []
-  );
+    ];
+    shuffle(arr); // randomize in place
+    return arr;
+  }, []);
 
-  // Start tracking time on mount
+  // Start timing the challenge on mount
   useEffect(() => {
     setStartTime(Date.now());
   }, []);
