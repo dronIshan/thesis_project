@@ -4,6 +4,9 @@ import EmotionFace from './EmotionFace';
 import PDMatchingGame from './PDMatchingGame';
 import StatsPopup from './StatsPopup';
 
+/**
+ * Role definitions grouped by category (Development, Management, etc.).
+ */
 const roles = {
   Development: [
     {
@@ -105,26 +108,25 @@ const ProjectSimulationGame = () => {
   // Simulation stats
   const [falseSelections, setFalseSelections] = useState(0);
   const [correctAssignments, setCorrectAssignments] = useState(0);
-  const [decisionTimes, setDecisionTimes] = useState([]); // milliseconds
+  const [decisionTimes, setDecisionTimes] = useState([]);
   const [isGameComplete, setIsGameComplete] = useState(false);
 
   // Product Design Challenge stats
   const [pdStats, setPdStats] = useState({ timeTaken: 0, falseMatches: 0, correctMatches: 0 });
 
-  // For measuring simulation time (optional feature)
+  // (Optional) track how long the simulation lasts
   const [simulationStartTime, setSimulationStartTime] = useState(null);
 
   const timerRef = useRef();
 
-  // Called after the PD challenge completes
+  // Called once PDMatchingGame is done
   const handlePdGameComplete = (stats) => {
-    // If PDMatchingGame passes stats, store them. Otherwise, default.
     setPdStats(stats || { timeTaken: 0, falseMatches: 0, correctMatches: 0 });
     setIsPdChallengeComplete(true);
     setSimulationStartTime(Date.now());
   };
 
-  // UseCallback to avoid missing deps warning
+  // Generate a new ticket at random
   const generateNewTicket = useCallback(() => {
     const allAllowedRoles = [
       'Backend Developer',
@@ -140,7 +142,7 @@ const ProjectSimulationGame = () => {
       {
         title: 'Implement user authentication',
         description: 'Create a secure login system for the application.',
-        roles: ['Backend Developer'], // Only senior
+        roles: ['Backend Developer'],
         priority: 'High',
         difficulty: 4,
         time: 60
@@ -179,7 +181,7 @@ const ProjectSimulationGame = () => {
       },
       {
         title: 'Set up project roadmap',
-        description: 'Outline project timeline and key milestones.',
+        description: 'Outline project timeline and milestones.',
         roles: ['Project Manager'],
         priority: 'High',
         difficulty: 4,
@@ -203,16 +205,15 @@ const ProjectSimulationGame = () => {
       },
       {
         title: 'Improve UI accessibility',
-        description: 'Enhance the UI for better accessibility.',
+        description: 'Enhance UI for better accessibility.',
         roles: ['UX/UI Designer'],
         priority: 'Medium',
         difficulty: 3,
         time: 35
       },
-      // "Any role" tickets
       {
         title: 'Attend company meeting',
-        description: 'Participate in the weekly company meeting and share updates.',
+        description: 'Participate in weekly meeting, share updates.',
         roles: allAllowedRoles,
         priority: 'Low',
         difficulty: 1,
@@ -220,7 +221,7 @@ const ProjectSimulationGame = () => {
       },
       {
         title: 'Perform system maintenance',
-        description: 'Conduct routine maintenance and updates for the entire system.',
+        description: 'Conduct maintenance and updates for entire system.',
         roles: allAllowedRoles,
         priority: 'Low',
         difficulty: 2,
@@ -242,14 +243,22 @@ const ProjectSimulationGame = () => {
     }
   }, [currentTicket, generateNewTicket]);
 
+  // Generate company details on mount
   useEffect(() => {
-    generateCompanyDetails();
+    const companies = [
+      'TechNova Solutions: AI-driven software development',
+      'GreenLeaf Innovations: Sustainable energy solutions',
+      'QuantumLink Systems: Quantum computing research',
+      'BioGenix Labs: Advanced biotechnology and genetics',
+      'CyberShield Securities: Cutting-edge cybersecurity services'
+    ];
+    setCompanyDetails(companies[Math.floor(Math.random() * companies.length)]);
   }, []);
 
-  // Timer + progress
+  // Timer + progress updates
   useEffect(() => {
     timerRef.current = setInterval(() => {
-      // Decrement remaining time for each ongoing ticket
+      // Decrement remaining time for each assigned ticket
       Object.values(roles).forEach((roleList) => {
         roleList.forEach((role) => {
           const completedTickets = [];
@@ -267,10 +276,11 @@ const ProjectSimulationGame = () => {
         });
       });
 
-      // Calculate progress
+      // Calculate total vs completed for the progress bar
       const totalTickets = Object.values(roles).reduce(
         (total, roleList) =>
-          total + roleList.reduce(
+          total +
+          roleList.reduce(
             (roleTotal, role) => roleTotal + role.completedTickets.length + role.ongoingTickets.length,
             0
           ),
@@ -279,27 +289,25 @@ const ProjectSimulationGame = () => {
 
       const completedTickets = Object.values(roles).reduce(
         (total, roleList) =>
-          total + roleList.reduce(
-            (roleTotal, role) => roleTotal + role.completedTickets.length,
-            0
-          ),
+          total +
+          roleList.reduce((roleTotal, role) => roleTotal + role.completedTickets.length, 0),
         0
       );
 
       const progressPercentage = totalTickets === 0 ? 0 : (completedTickets / totalTickets) * 100;
       setProgress(progressPercentage);
 
-      // If progress hits 100%, game ends
-      if (progressPercentage === 100) {
+      // End game if progress hits 100%
+      if (progressPercentage >= 100) {
         setIsGameComplete(true);
         clearInterval(timerRef.current);
       }
 
       // If current ticket expires, penalize and generate new
       if (currentTicket && currentTicket.remainingTime <= 0) {
-        setScore(prev => prev - 5);
+        setScore((prev) => prev - 5);
         const decisionTime = Date.now() - currentTicket.startTime;
-        setDecisionTimes(prev => [...prev, decisionTime]);
+        setDecisionTimes((prev) => [...prev, decisionTime]);
         generateNewTicket();
       }
     }, 1000);
@@ -307,18 +315,7 @@ const ProjectSimulationGame = () => {
     return () => clearInterval(timerRef.current);
   }, [currentTicket, generateNewTicket]);
 
-  const generateCompanyDetails = () => {
-    const companies = [
-      'TechNova Solutions: AI-driven software development',
-      'GreenLeaf Innovations: Sustainable energy solutions',
-      'QuantumLink Systems: Quantum computing research',
-      'BioGenix Labs: Advanced biotechnology and genetics',
-      'CyberShield Securities: Cutting-edge cybersecurity services'
-    ];
-    setCompanyDetails(companies[Math.floor(Math.random() * companies.length)]);
-  };
-
-  // Drag and Drop
+  // Drag + Drop
   const handleDragStart = (e, ticket) => {
     e.dataTransfer.setData('text/plain', JSON.stringify(ticket));
     setIsDragging(true);
@@ -329,48 +326,45 @@ const ProjectSimulationGame = () => {
     setHighlightedRole(null);
   };
 
-  // Because these are not called in the JSX, we remove them:
-  // const handleDragOver = (e, roleName) => { ... }
-  // const handleDragLeave = () => { ... }
-  // const handleRoleHover = (roleName) => { ... }
-  // const handleTicketHover = (isHovering) => { ... }
-
   const handleDrop = (e, role) => {
     e.preventDefault();
     const ticket = JSON.parse(e.dataTransfer.getData('text'));
     const decisionTime = Date.now() - ticket.startTime;
-    setDecisionTimes(prev => [...prev, decisionTime]);
+    setDecisionTimes((prev) => [...prev, decisionTime]);
 
     if (
       ticket.roles.includes(role.name) &&
       role.ongoingTickets.length < role.load &&
       ticket.difficulty <= role.maxDifficulty
     ) {
+      // fully correct
       role.ongoingTickets.push(ticket);
-      setScore(prev => prev + 10);
-      setCorrectAssignments(prev => prev + 1);
+      setScore((prev) => prev + 10);
+      setCorrectAssignments((prev) => prev + 1);
       generateNewTicket();
     } else if (
       ticket.roles.includes(role.name) &&
       role.ongoingTickets.length < role.load &&
       ticket.difficulty > role.maxDifficulty
     ) {
-      ticket.time = ticket.time * 1.5;
+      // role can do it but difficulty is high -> partial reward
+      ticket.time *= 1.5;
       ticket.remainingTime = ticket.time;
       role.ongoingTickets.push(ticket);
-      setScore(prev => prev + 5);
-      setCorrectAssignments(prev => prev + 1);
+      setScore((prev) => prev + 5);
+      setCorrectAssignments((prev) => prev + 1);
       generateNewTicket();
     } else {
-      setScore(prev => prev - 5);
-      setFalseSelections(prev => prev + 1);
+      // incorrect
+      setScore((prev) => prev - 5);
+      setFalseSelections((prev) => prev + 1);
     }
 
     setIsDragging(false);
     setHighlightedRole(null);
   };
 
-  // Format time function
+  // Format seconds to D/H/M
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / 60);
     const hours = Math.floor((seconds % 60) / 2.5);
@@ -379,9 +373,9 @@ const ProjectSimulationGame = () => {
   };
 
   const handleTimeUp = () => {
-    setScore(prev => prev - 5);
+    setScore((prev) => prev - 5);
     const dt = Date.now() - currentTicket.startTime;
-    setDecisionTimes(prev => [...prev, dt]);
+    setDecisionTimes((prev) => [...prev, dt]);
     generateNewTicket();
   };
 
@@ -394,15 +388,17 @@ const ProjectSimulationGame = () => {
     return 'neutral';
   };
 
-  // If PD not done, render that first
+  // If the PD matching game isn't finished, show that first
   if (!isPdChallengeComplete) {
     return <PDMatchingGame onComplete={handlePdGameComplete} />;
   }
 
-  // If game is complete => show final popup
+  // If the simulation is complete, show the StatsPopup
   if (isGameComplete) {
-    // Optionally measure total simulation time
-    const simulationTime = simulationStartTime ? ((Date.now() - simulationStartTime) / 1000).toFixed(2) : '0';
+    // total simulation time
+    const simulationTime = simulationStartTime
+      ? ((Date.now() - simulationStartTime) / 1000).toFixed(2)
+      : '0';
 
     return (
       <StatsPopup
@@ -417,23 +413,52 @@ const ProjectSimulationGame = () => {
     );
   }
 
-  // Render main simulation
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <header style={{ backgroundColor: '#f3f4f6', padding: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        backgroundColor: '#f8fafc' // subtle background
+      }}
+    >
+      {/* Header Section */}
+      <header
+        style={{
+          backgroundColor: '#374151', // a darker gray
+          padding: '1rem',
+          color: '#f9fafb', // near-white text
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Progress bar container */}
           <div
             style={{
-              width: '100%',
+              flex: 1,
               height: '1rem',
-              backgroundColor: '#e5e7eb',
+              backgroundColor: '#6b7280', // medium gray
               borderRadius: '9999px',
+              marginRight: '1rem',
               overflow: 'hidden'
             }}
           >
-            <div style={{ height: '100%', backgroundColor: '#22c55e', width: `${progress}%` }}></div>
+            <div
+              style={{
+                height: '100%',
+                backgroundColor: '#10b981', // green
+                width: `${progress}%`,
+                transition: 'width 0.3s ease'
+              }}
+            />
           </div>
-          <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>Score: {score}</span>
+
+          {/* Score Display */}
+          <span style={{ fontWeight: 'bold' }}>Score: {score}</span>
+
+          {/* Practice mode toggle */}
           <div style={{ display: 'flex', alignItems: 'center', marginLeft: '1rem' }}>
             <span style={{ marginRight: '0.5rem' }}>Practice Mode</span>
             <input
@@ -443,132 +468,157 @@ const ProjectSimulationGame = () => {
             />
           </div>
         </div>
+
+        {/* Sub-header row */}
+        <div style={{ marginLeft: '0.5rem', fontSize: '0.875rem' }}>
+          <strong>Company:</strong> {companyDetails}
+        </div>
       </header>
 
+      {/* Main content area */}
       <main style={{ display: 'flex', flex: 1 }}>
-        <aside style={{ width: '25%', backgroundColor: '#e5e7eb', padding: '1rem' }}>
-          <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center' }}>
-            <div
-              style={{
-                marginLeft: '0.5rem',
-                padding: '0.5rem',
-                backgroundColor: '#d1fae5',
-                borderRadius: '0.25rem'
-              }}
-            >
-              <p style={{ fontSize: '0.875rem', fontWeight: 'bold' }}>Company Details:</p>
-              <p style={{ fontSize: '0.75rem' }}>{companyDetails}</p>
-            </div>
-          </div>
+        <aside
+          style={{
+            width: '25%',
+            backgroundColor: '#f3f4f6',
+            padding: '1rem',
+            boxShadow: 'inset -1px 0 2px rgba(0,0,0,0.05)'
+          }}
+        >
+          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: '600' }}>Current Ticket</h2>
           {currentTicket && (
             <div
               style={{
                 backgroundColor: 'white',
                 padding: '1rem',
                 borderRadius: '0.25rem',
-                boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06)'
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                transition: 'transform 0.2s'
               }}
               draggable
               onDragStart={(e) => handleDragStart(e, currentTicket)}
               onDragEnd={handleDragEnd}
             >
-              <h3 style={{ fontWeight: 'bold' }}>{currentTicket.title}</h3>
-              <p>{currentTicket.description}</p>
-              <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginLeft: '0.5rem' }}>Priority: {currentTicket.priority}</span>
-                <span style={{ marginLeft: '0.5rem' }}>Difficulty: {currentTicket.difficulty}</span>
-                <span style={{ marginLeft: '0.5rem' }}>
-                  Allocated Time: {(currentTicket.time / 60).toFixed(2)} days
+              <h3 style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{currentTicket.title}</h3>
+              <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>{currentTicket.description}</p>
+              <div style={{ marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                <span style={{ marginRight: '0.5rem' }}>
+                  <strong>Priority:</strong> {currentTicket.priority}
+                </span>
+                <span style={{ marginRight: '0.5rem' }}>
+                  <strong>Difficulty:</strong> {currentTicket.difficulty}
+                </span>
+                <span>
+                  <strong>Allocated:</strong> {(currentTicket.time / 60).toFixed(2)} days
                 </span>
               </div>
-              <div>
-                <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
-              </div>
+              <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
             </div>
           )}
         </aside>
 
-        {/* Roles display */}
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', padding: '1rem' }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '1rem',
+            padding: '1rem'
+          }}
+        >
           {Object.entries(roles).map(([category, rolesList]) => (
-            <div key={category} style={{ overflowY: 'auto', maxHeight: '80vh' }}>
+            <div key={category} style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 4rem)' }}>
               <h2
                 style={{
                   textAlign: 'center',
                   fontWeight: 'bold',
+                  fontSize: '1.1rem',
                   padding: '0.5rem',
-                  backgroundColor: '#f3f4f6',
-                  marginBottom: '1rem'
+                  backgroundColor: '#f9fafb',
+                  borderBottom: '1px solid #e5e7eb',
+                  marginBottom: '0.5rem'
                 }}
               >
                 {category}
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                {rolesList.map((role) => (
-                  <div
-                    key={role.name}
-                    style={{
-                      aspectRatio: '1 / 1',
-                      border: '1px solid #e5e7eb',
-                      padding: '1rem',
-                      borderRadius: '0.5rem',
-                      boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06)',
-                      transition: 'background-color 0.3s',
-                      backgroundColor:
-                        role.ongoingTickets.length >= role.load && isDragging
-                          ? '#ef4444'
-                          : highlightedRole === role.name
-                          ? isDragging ? '#d1fae5' : '#fef3c7'
+                {rolesList.map((role) => {
+                  const isRoleHighlighted = highlightedRole === role.name;
+                  const isRoleOverloaded = role.ongoingTickets.length >= role.load && isDragging;
+
+                  return (
+                    <div
+                      key={role.name}
+                      style={{
+                        border: '1px solid #e5e7eb',
+                        padding: '1rem',
+                        borderRadius: '0.5rem',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                        backgroundColor: isRoleOverloaded
+                          ? '#ef4444' // red if overloaded
+                          : isRoleHighlighted && isDragging
+                          ? '#d1fae5' // light-green if drag highlight
+                          : isRoleHighlighted
+                          ? '#fef3c7' // light-yellow highlight if hovered
                           : 'white',
-                      borderColor:
-                        highlightedRole === role.name && isDragging
-                          ? '#22c55e'
-                          : '#e5e7eb',
-                      borderWidth:
-                        highlightedRole === role.name && isDragging
-                          ? '2px'
-                          : '1px'
-                    }}
-                    onDrop={(e) => handleDrop(e, role)}
-                    onDragOver={(e) => e.preventDefault()}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        borderColor: isRoleHighlighted && isDragging ? '#22c55e' : '#e5e7eb',
+                        borderWidth: isRoleHighlighted && isDragging ? '2px' : '1px',
+                        transition: 'background-color 0.3s, box-shadow 0.3s'
+                      }}
+                      onDrop={(e) => handleDrop(e, role)}
+                      onDragOver={(e) => e.preventDefault()}
+                    >
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
                         <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>{role.icon}</span>
-                        <h3 style={{ fontWeight: 'bold', fontSize: '0.875rem' }}>{role.name}</h3>
+                        <h3 style={{ fontWeight: 'bold', fontSize: '0.9rem', margin: 0 }}>{role.name}</h3>
                       </div>
-                      <p style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>Experience: {role.experience} years</p>
-                      <p style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>Role: {role.role}</p>
-                      <p style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>Max Difficulty: {role.maxDifficulty}</p>
-                      <p style={{ fontSize: '0.875rem', marginBottom: '0.5rem' }}>Load: {role.load}</p>
-                      <div style={{ flexGrow: 1 }}>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>Skills:</p>
-                        <ul style={{ fontSize: '0.75rem', listStyleType: 'disc', paddingLeft: '1rem' }}>
+                      <p style={{ fontSize: '0.8rem', margin: '0.25rem 0' }}>
+                        <strong>Experience:</strong> {role.experience} years
+                      </p>
+                      <p style={{ fontSize: '0.8rem', margin: '0.25rem 0' }}>
+                        <strong>Role:</strong> {role.role}
+                      </p>
+                      <p style={{ fontSize: '0.8rem', margin: '0.25rem 0' }}>
+                        <strong>Max Difficulty:</strong> {role.maxDifficulty}
+                      </p>
+                      <p style={{ fontSize: '0.8rem', margin: '0.25rem 0' }}>
+                        <strong>Load:</strong> {role.load}
+                      </p>
+
+                      <div style={{ fontSize: '0.8rem', margin: '0.5rem 0' }}>
+                        <strong>Skills:</strong>
+                        <ul style={{ listStyleType: 'disc', paddingLeft: '1rem' }}>
                           {role.skills.map((skill, idx) => (
                             <li key={idx}>{skill}</li>
                           ))}
                         </ul>
                       </div>
-                      <div>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>Ongoing Tickets:</p>
-                        <ul style={{ fontSize: '0.75rem', listStyleType: 'disc', paddingLeft: '1rem' }}>
+
+                      <div style={{ fontSize: '0.8rem', marginBottom: '0.5rem' }}>
+                        <strong>Ongoing Tickets:</strong>
+                        <ul style={{ listStyleType: 'disc', paddingLeft: '1rem' }}>
                           {role.ongoingTickets.map((ticket, idx) => (
-                            <li key={idx}>{ticket.title} ({formatTime(ticket.remainingTime)})</li>
+                            <li key={idx}>
+                              {ticket.title} ({formatTime(ticket.remainingTime)})
+                            </li>
                           ))}
                         </ul>
                       </div>
-                      <div>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>Completed Tickets:</p>
-                        <ul style={{ fontSize: '0.75rem', listStyleType: 'disc', paddingLeft: '1rem' }}>
+                      <div style={{ fontSize: '0.8rem' }}>
+                        <strong>Completed Tickets:</strong>
+                        <ul style={{ listStyleType: 'disc', paddingLeft: '1rem' }}>
                           {role.completedTickets.map((ticket, idx) => (
                             <li key={idx}>{ticket.title}</li>
                           ))}
                         </ul>
                       </div>
+
+                      <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+                        <EmotionFace emotion={getEmotion(role)} />
+                      </div>
                     </div>
-                    <EmotionFace emotion={getEmotion(role)} />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
