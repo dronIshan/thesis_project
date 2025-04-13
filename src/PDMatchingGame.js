@@ -22,7 +22,7 @@ const PDMatchingGame = ({ onComplete }) => {
   const [startTime, setStartTime] = useState(null);
   const [falseMatches, setFalseMatches] = useState(0);
 
-  // We define + shuffle the stakeholder requirements
+  // Define + shuffle the stakeholder requirements
   const stakeholderRequirements = useMemo(() => {
     const arr = [
       {
@@ -55,7 +55,7 @@ const PDMatchingGame = ({ onComplete }) => {
     return arr;
   }, []);
 
-  // We define + shuffle the technical tickets
+  // Define + shuffle the technical tickets
   const technicalTickets = useMemo(() => {
     const arr = [
       {
@@ -103,11 +103,12 @@ const PDMatchingGame = ({ onComplete }) => {
     return arr;
   }, []);
 
-  // Start timing the challenge on mount
+  // Start timing on mount
   useEffect(() => {
     setStartTime(Date.now());
   }, []);
 
+  // Handle user clicking a stakeholder requirement
   const handleRequirementClick = (reqId) => {
     if (!matches.includes(reqId)) {
       setSelectedRequirement(reqId);
@@ -117,6 +118,7 @@ const PDMatchingGame = ({ onComplete }) => {
     }
   };
 
+  // Handle user clicking a technical ticket
   const handleTicketClick = (ticket) => {
     if (selectedRequirement) {
       setSelectedTicket(ticket);
@@ -126,16 +128,19 @@ const PDMatchingGame = ({ onComplete }) => {
     }
   };
 
+  // Check if chosen ticket matches chosen requirement
   const checkMatch = (ticket) => {
     const requirement = stakeholderRequirements.find(r => r.id === selectedRequirement);
 
     if (requirement.correctMatch === ticket.title) {
+      // correct match
       setScore(prev => prev + 1);
       setMatches(prev => [...prev, requirement.id]);
       setCorrectMatches(prev => [...prev, ticket.title]);
       setMessage('Correct match! Select another requirement.');
       setIncorrectSelection(null);
     } else {
+      // incorrect match
       setMessage('Incorrect match. Try another ticket or requirement.');
       setIncorrectSelection(ticket.title);
       setFalseMatches(prev => prev + 1);
@@ -166,68 +171,97 @@ const PDMatchingGame = ({ onComplete }) => {
   }, [matches, stakeholderRequirements, onComplete, score, falseMatches, startTime]);
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <div className="mb-4 text-center">
-        <h2 className="text-2xl font-bold mb-2">Product Design Challenge</h2>
-        <p className="text-gray-600">Match stakeholder requirements to technical specifications</p>
-        <div className="mt-2">Score: {score} / {stakeholderRequirements.length}</div>
-        <div className="mt-2 p-2 bg-yellow-100 border rounded">{message}</div>
+    <div className="max-w-4xl mx-auto py-6 px-4">
+      {/* Title & Instructions */}
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Product Design Challenge
+        </h2>
+        <p className="text-gray-600 mb-2">
+          Match stakeholder requirements to technical specifications
+        </p>
+        <div className="mt-2 text-lg font-semibold">
+          Score: {score} / {stakeholderRequirements.length}
+        </div>
+        <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded text-gray-800">
+          {message}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {/* Stakeholder Requirements */}
+      <div className="grid grid-cols-2 gap-8">
+        {/* Stakeholder Requirements List */}
         <div>
-          <h3 className="text-xl font-semibold mb-3">Stakeholder Requirements</h3>
+          <h3 className="text-xl font-semibold text-gray-700 mb-3">
+            Stakeholder Requirements
+          </h3>
           <div className="space-y-3">
             {stakeholderRequirements.map(req => {
               const isMatched = matches.includes(req.id);
               const isSelected = selectedRequirement === req.id;
+
               return (
                 <div
                   key={req.id}
                   className={`
-                    cursor-pointer transition-all duration-200 p-4 border rounded
-                    ${isMatched ? 'bg-green-100 cursor-not-allowed' : ''}
-                    ${isSelected ? 'bg-blue-100 shadow-md transform scale-105' : ''}
-                    hover:shadow-lg
+                    transition-all duration-200 p-4 border rounded cursor-pointer
+                    ${isMatched ? 'bg-green-50 cursor-not-allowed opacity-75' : ''}
+                    ${isSelected ? 'bg-blue-50 shadow-md transform scale-105 border-blue-300' : ''}
+                    hover:shadow-md
                   `}
                   onClick={() => handleRequirementClick(req.id)}
                 >
-                  {req.requirement}
+                  <span className="font-medium text-gray-800">
+                    {req.requirement}
+                  </span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Technical Tickets */}
+        {/* Technical Tickets List */}
         <div>
-          <h3 className="text-xl font-semibold mb-3">Technical Tickets</h3>
+          <h3 className="text-xl font-semibold text-gray-700 mb-3">
+            Technical Tickets
+          </h3>
           <div className="space-y-3">
             {technicalTickets.map((ticket, index) => {
               const isCorrect = correctMatches.includes(ticket.title);
-              const isIncorrect = selectedTicket?.title === ticket.title && incorrectSelection === ticket.title;
-              const isSelected = selectedTicket?.title === ticket.title && !incorrectSelection;
+              const isIncorrect =
+                selectedTicket?.title === ticket.title &&
+                incorrectSelection === ticket.title;
+              const isSelected =
+                selectedTicket?.title === ticket.title && !incorrectSelection;
               const isDisabled = !selectedRequirement;
 
               return (
                 <div
                   key={index}
                   className={`
-                    cursor-pointer transition-all duration-200 p-4 border rounded
-                    ${isCorrect ? 'bg-green-100 cursor-not-allowed' : ''}
-                    ${isIncorrect ? 'bg-red-100 shadow-md transform scale-105' : ''}
-                    ${isSelected ? 'bg-blue-100 shadow-md transform scale-105' : ''}
-                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'}
+                    transition-all duration-200 p-4 border rounded cursor-pointer
+                    ${isCorrect ? 'bg-green-50 cursor-not-allowed opacity-75 border-green-200' : ''}
+                    ${isIncorrect ? 'bg-red-50 shadow-md transform scale-105 border-red-300' : ''}
+                    ${isSelected ? 'bg-blue-50 shadow-md transform scale-105 border-blue-300' : ''}
+                    ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
                   `}
                   onClick={() => !isDisabled && handleTicketClick(ticket)}
                 >
-                  <h4 className="font-semibold">{ticket.title}</h4>
-                  <p className="text-sm text-gray-600">{ticket.description}</p>
-                  <div className="mt-2 text-sm">
-                    <span className="mr-3">Role: {ticket.role}</span>
-                    <span className="mr-3">Priority: {ticket.priority}</span>
-                    <span>Time: {ticket.time}h</span>
+                  <h4 className="font-semibold text-gray-800">
+                    {ticket.title}
+                  </h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {ticket.description}
+                  </p>
+                  <div className="mt-2 text-sm text-gray-700 flex flex-wrap gap-2">
+                    <span className="mr-3">
+                      <strong>Role:</strong> {ticket.role}
+                    </span>
+                    <span className="mr-3">
+                      <strong>Priority:</strong> {ticket.priority}
+                    </span>
+                    <span>
+                      <strong>Time:</strong> {ticket.time}h
+                    </span>
                   </div>
                 </div>
               );
