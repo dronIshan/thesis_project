@@ -1,5 +1,4 @@
-// PDMatchingGame.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 const PDMatchingGame = ({ onComplete }) => {
   const [selectedRequirement, setSelectedRequirement] = useState(null);
@@ -10,76 +9,92 @@ const PDMatchingGame = ({ onComplete }) => {
   const [message, setMessage] = useState('Select a stakeholder requirement to begin');
   const [incorrectSelection, setIncorrectSelection] = useState(null);
 
-  const stakeholderRequirements = [
-    {
-      id: 1,
-      requirement: "We need a way for users to securely log into their accounts",
-      correctMatch: "Implement user authentication"
-    },
-    {
-      id: 2,
-      requirement: "The website is loading too slowly when users search for products",
-      correctMatch: "Optimize database queries"
-    },
-    {
-      id: 3,
-      requirement: "Our customers complain that the website doesn't work well on their phones",
-      correctMatch: "Design responsive UI"
-    },
-    {
-      id: 4,
-      requirement: "We want to accept credit cards and PayPal on our store",
-      correctMatch: "Integrate payment gateway"
-    },
-    {
-      id: 5,
-      requirement: "Users want to know immediately when someone messages them",
-      correctMatch: "Implement real-time notifications"
-    }
-  ];
+  // For stats:
+  const [startTime, setStartTime] = useState(null);
+  const [falseMatches, setFalseMatches] = useState(0);
 
-  const technicalTickets = [
-    {
-      title: 'Implement user authentication',
-      description: 'Create a secure login system for the application.',
-      role: 'Backend Developer',
-      priority: 'High',
-      difficulty: 4,
-      time: 60
-    },
-    {
-      title: 'Optimize database queries',
-      description: 'Improve the performance of SQL queries for faster data retrieval.',
-      role: 'Backend Developer',
-      priority: 'Medium',
-      difficulty: 3,
-      time: 45
-    },
-    {
-      title: 'Design responsive UI',
-      description: 'Create a mobile-friendly interface for the dashboard.',
-      role: 'UX/UI Designer',
-      priority: 'Low',
-      difficulty: 2,
-      time: 30
-    },
-    {
-      title: 'Integrate payment gateway',
-      description: 'Add support for multiple payment methods in the checkout process.',
-      role: 'Backend Developer',
-      priority: 'High',
-      difficulty: 5,
-      time: 75
-    },
-    {
-      title: 'Implement real-time notifications',
-      description: 'Set up WebSocket connections for instant updates.',
-      role: 'Backend Developer',
-      priority: 'Medium',
-      difficulty: 3,
-      time: 60
-    }
-  ];
+  // Wrap these arrays in useMemo to avoid re-creating them on every render
+  const stakeholderRequirements = useMemo(
+    () => [
+      {
+        id: 1,
+        requirement: "We need a way for users to securely log into their accounts",
+        correctMatch: "Implement user authentication"
+      },
+      {
+        id: 2,
+        requirement: "The website is loading too slowly when users search for products",
+        correctMatch: "Optimize database queries"
+      },
+      {
+        id: 3,
+        requirement: "Our customers complain that the website doesn't work well on their phones",
+        correctMatch: "Design responsive UI"
+      },
+      {
+        id: 4,
+        requirement: "We want to accept credit cards and PayPal on our store",
+        correctMatch: "Integrate payment gateway"
+      },
+      {
+        id: 5,
+        requirement: "Users want to know immediately when someone messages them",
+        correctMatch: "Implement real-time notifications"
+      }
+    ],
+    []
+  );
+
+  const technicalTickets = useMemo(
+    () => [
+      {
+        title: 'Implement user authentication',
+        description: 'Create a secure login system for the application.',
+        role: 'Backend Developer',
+        priority: 'High',
+        difficulty: 4,
+        time: 60
+      },
+      {
+        title: 'Optimize database queries',
+        description: 'Improve the performance of SQL queries for faster data retrieval.',
+        role: 'Backend Developer',
+        priority: 'Medium',
+        difficulty: 3,
+        time: 45
+      },
+      {
+        title: 'Design responsive UI',
+        description: 'Create a mobile-friendly interface for the dashboard.',
+        role: 'UX/UI Designer',
+        priority: 'Low',
+        difficulty: 2,
+        time: 30
+      },
+      {
+        title: 'Integrate payment gateway',
+        description: 'Add support for multiple payment methods in the checkout process.',
+        role: 'Backend Developer',
+        priority: 'High',
+        difficulty: 5,
+        time: 75
+      },
+      {
+        title: 'Implement real-time notifications',
+        description: 'Set up WebSocket connections for instant updates.',
+        role: 'Backend Developer',
+        priority: 'Medium',
+        difficulty: 3,
+        time: 60
+      }
+    ],
+    []
+  );
+
+  // Start tracking time on mount
+  useEffect(() => {
+    setStartTime(Date.now());
+  }, []);
 
   const handleRequirementClick = (reqId) => {
     if (!matches.includes(reqId)) {
@@ -111,6 +126,7 @@ const PDMatchingGame = ({ onComplete }) => {
     } else {
       setMessage('Incorrect match. Try another ticket or requirement.');
       setIncorrectSelection(ticket.title);
+      setFalseMatches(prev => prev + 1);
     }
 
     setTimeout(() => {
@@ -120,14 +136,22 @@ const PDMatchingGame = ({ onComplete }) => {
     }, 1000);
   };
 
+  // If user matched all stakeholder requirements
   useEffect(() => {
     if (matches.length === stakeholderRequirements.length) {
       setMessage('All matches done! Starting the main game...');
+      const timeTakenSec = Math.round((Date.now() - startTime) / 1000);
+      const finalStats = {
+        timeTaken: timeTakenSec,
+        correctMatches: score,
+        falseMatches: falseMatches
+      };
+
       setTimeout(() => {
-        onComplete?.();
+        onComplete?.(finalStats);
       }, 1500);
     }
-  }, [matches, stakeholderRequirements, onComplete]);
+  }, [matches, stakeholderRequirements, onComplete, score, falseMatches, startTime]);
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
@@ -147,7 +171,7 @@ const PDMatchingGame = ({ onComplete }) => {
               const isMatched = matches.includes(req.id);
               const isSelected = selectedRequirement === req.id;
               return (
-                <div 
+                <div
                   key={req.id}
                   className={`
                     cursor-pointer transition-all duration-200 p-4 border rounded
@@ -175,7 +199,7 @@ const PDMatchingGame = ({ onComplete }) => {
               const isDisabled = !selectedRequirement;
 
               return (
-                <div 
+                <div
                   key={index}
                   className={`
                     cursor-pointer transition-all duration-200 p-4 border rounded
