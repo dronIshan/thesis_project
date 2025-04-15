@@ -16,7 +16,6 @@ const LoadingScreen = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    // Set canvas to full screen
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     const letters = 'ISHANVIHANGAVIMUKTHIKANDAGEDON'.repeat(10).split('');
@@ -41,7 +40,6 @@ const LoadingScreen = () => {
         }
       }
     };
-
     const intervalId = setInterval(draw, 33);
     return () => clearInterval(intervalId);
   }, []);
@@ -117,32 +115,53 @@ const PDMatchingGame = ({ onComplete }) => {
   const [startTime, setStartTime] = useState(null);
   const [falseMatches, setFalseMatches] = useState(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
+  // This state will store simulation data to be passed upward.
+  const [simulationData, setSimulationData] = useState({
+    roles: {},
+    tickets: [],
+    companyDetails: ''
+  });
 
-  // 1) Fetch data on mount FROM /api/dynamic-pd
+  // 1) Fetch both PD data and simulation data on mount
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAllData = async () => {
       try {
-        const res = await fetch(`${API_BASE}/dynamic-pd`);
-        const data = await res.json();
-        // data should have: company_info, pd_requirements, pd_technical_tickets
-        if (data.company_info) {
-          setCompanyInfo(data.company_info);
+        // Fetch dynamic PD data
+        const pdRes = await fetch(`${API_BASE}/dynamic-pd`);
+        const pdData = await pdRes.json();
+        if (pdData.company_info) {
+          setCompanyInfo(pdData.company_info);
         }
-        const reqData = data.pd_requirements || [];
-        const techData = data.pd_technical_tickets || [];
+        const reqData = pdData.pd_requirements || [];
+        const techData = pdData.pd_technical_tickets || [];
         shuffle(reqData);
         shuffle(techData);
         setStakeholderRequirements(reqData);
         setTechnicalTickets(techData);
         setStartTime(Date.now());
+        // Fetch simulation data concurrently
+        const [rolesRes, ticketsRes, companiesRes] = await Promise.all([
+          fetch(`${API_BASE}/roles`),
+          fetch(`${API_BASE}/simulation-tickets`),
+          fetch(`${API_BASE}/companies`)
+        ]);
+        const rolesData = await rolesRes.json();
+        const ticketsData = await ticketsRes.json();
+        const companiesData = await companiesRes.json();
+        const randomCompany = companiesData[Math.floor(Math.random() * companiesData.length)];
+        setSimulationData({
+          roles: rolesData,
+          tickets: ticketsData,
+          companyDetails: randomCompany
+        });
       } catch (err) {
-        console.error('Failed to load PD data', err);
+        console.error('Failed to load PD or simulation data', err);
         setMessage('Failed to load challenge data. Please try refreshing the page.');
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchAllData();
   }, []);
 
   // Timer effect
@@ -189,16 +208,20 @@ const PDMatchingGame = ({ onComplete }) => {
     }, 1000);
   };
 
-  // 3) When all matched, fire onComplete with stats
+  // 3) When all matched, fire onComplete with stats and simulation data
   useEffect(() => {
     if (!loading && matches.length === stakeholderRequirements.length && stakeholderRequirements.length > 0) {
       setMessage('🎉 All matches done! Starting the main game...');
       const timeTaken = Math.round((Date.now() - startTime) / 1000);
+      // Pass PD stats plus the simulation data fetched earlier
       setTimeout(() => {
-        onComplete?.({ timeTaken, correctMatches: score, falseMatches });
+        onComplete({
+          pdStats: { timeTaken, correctMatches: score, falseMatches },
+          simulationData
+        });
       }, 1500);
     }
-  }, [matches, loading, stakeholderRequirements, onComplete, score, falseMatches, startTime]);
+  }, [matches, loading, stakeholderRequirements, onComplete, score, falseMatches, startTime, simulationData]);
 
   // 4) If loading, render the full-screen CRT-style LoadingScreen
   if (loading) {
