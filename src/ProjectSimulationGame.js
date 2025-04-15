@@ -4,102 +4,17 @@ import EmotionFace from './EmotionFace';
 import PDMatchingGame from './PDMatchingGame';
 import StatsPopup from './StatsPopup';
 
-/**
- * Role definitions grouped by category (Development, Management, etc.).
- */
-const roles = {
-  Development: [
-    {
-      name: 'Backend Developer',
-      icon: '🖥️',
-      experience: 5,
-      skills: ['Java', 'Python', 'Node.js'],
-      role: 'senior',
-      load: 3,
-      maxDifficulty: 5,
-      ongoingTickets: [],
-      completedTickets: []
-    },
-    {
-      name: 'Backend Developer Intern',
-      icon: '🖥️',
-      experience: 2,
-      skills: ['Java', 'Python'],
-      role: 'intern',
-      load: 1,
-      maxDifficulty: 3,
-      ongoingTickets: [],
-      completedTickets: []
-    }
-  ],
-  Management: [
-    {
-      name: 'Project Manager',
-      icon: '📅',
-      experience: 8,
-      skills: ['Agile', 'Scrum', 'Jira'],
-      role: 'senior',
-      load: 5,
-      maxDifficulty: 5,
-      ongoingTickets: [],
-      completedTickets: []
-    },
-    {
-      name: 'Product Owner',
-      icon: '🎯',
-      experience: 7,
-      skills: ['Roadmapping', 'User Stories', 'Backlog Management'],
-      role: 'senior',
-      load: 4,
-      maxDifficulty: 4,
-      ongoingTickets: [],
-      completedTickets: []
-    }
-  ],
-  Design: [
-    {
-      name: 'UX/UI Designer',
-      icon: '🖌️',
-      experience: 5,
-      skills: ['Figma', 'Sketch', 'User Research'],
-      role: 'senior',
-      load: 3,
-      maxDifficulty: 5,
-      ongoingTickets: [],
-      completedTickets: []
-    },
-    {
-      name: 'Graphic Designer',
-      icon: '🎭',
-      experience: 6,
-      skills: ['Photoshop', 'Illustrator', 'InDesign'],
-      role: 'senior',
-      load: 3,
-      maxDifficulty: 6,
-      ongoingTickets: [],
-      completedTickets: []
-    }
-  ],
-  Database: [
-    {
-      name: 'Database Administrator',
-      icon: '🗄️',
-      experience: 6,
-      skills: ['SQL', 'Performance Tuning', 'Indexing', 'Backup & Recovery'],
-      role: 'senior',
-      load: 2,
-      maxDifficulty: 4,
-      ongoingTickets: [],
-      completedTickets: []
-    }
-  ]
-};
-
 const ProjectSimulationGame = () => {
+  // ----------------------------------------------------------------------
+  // State
+  // ----------------------------------------------------------------------
+  const [roles, setRoles] = useState({});
+  const [tickets, setTickets] = useState([]);
+  const [companyDetails, setCompanyDetails] = useState(''); 
+
   const [score, setScore] = useState(0);
   const [progress, setProgress] = useState(0);
   const [currentTicket, setCurrentTicket] = useState(null);
-  const [companyDetails, setCompanyDetails] = useState('');
   const [highlightedRole, setHighlightedRole] = useState(null);
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -119,145 +34,80 @@ const ProjectSimulationGame = () => {
 
   const timerRef = useRef();
 
+  // ----------------------------------------------------------------------
+  // Fetch roles
+  // ----------------------------------------------------------------------
+  useEffect(() => {
+    fetch('https://ishanvimukthi.pythonanywhere.com/api/roles')
+      .then((res) => res.json())
+      .then((data) => {
+        setRoles(data);
+      })
+      .catch((err) => console.error('Error fetching roles:', err));
+  }, []);
+
+  // ----------------------------------------------------------------------
+  // Fetch simulation tickets
+  // ----------------------------------------------------------------------
+  useEffect(() => {
+    fetch('https://ishanvimukthi.pythonanywhere.com/api/simulation-tickets')
+      .then((res) => res.json())
+      .then((data) => {
+        setTickets(data);
+      })
+      .catch((err) => console.error('Error fetching tickets:', err));
+  }, []);
+
+  // ----------------------------------------------------------------------
+  // Fetch company data
+  // ----------------------------------------------------------------------
+  useEffect(() => {
+    fetch('https://ishanvimukthi.pythonanywhere.com/api/companies')
+      .then((res) => res.json())
+      .then((data) => {
+        // Pick a random company from the array
+        const randomCompany = data[Math.floor(Math.random() * data.length)];
+        setCompanyDetails(randomCompany);
+      })
+      .catch((err) => console.error('Error fetching company data:', err));
+  }, []);
+
+  // ----------------------------------------------------------------------
   // Called once PDMatchingGame is done
+  // ----------------------------------------------------------------------
   const handlePdGameComplete = (stats) => {
     setPdStats(stats || { timeTaken: 0, falseMatches: 0, correctMatches: 0 });
     setIsPdChallengeComplete(true);
     setSimulationStartTime(Date.now());
   };
 
-  // Generate a new ticket at random
+  // ----------------------------------------------------------------------
+  // Generate a new ticket at random from the fetched tickets
+  // ----------------------------------------------------------------------
   const generateNewTicket = useCallback(() => {
-    const allAllowedRoles = [
-      'Backend Developer',
-      'Backend Developer Intern',
-      'Project Manager',
-      'Product Owner',
-      'UX/UI Designer',
-      'Graphic Designer',
-      'Database Administrator'
-    ];
-
-    const tickets = [
-      {
-        title: 'Implement user authentication',
-        description: 'Create a secure login system for the application.',
-        roles: ['Backend Developer'],
-        priority: 'High',
-        difficulty: 4,
-        time: 60
-      },
-      {
-        title: 'Develop code documentation',
-        description: 'Write clear technical documentation for the API.',
-        roles: ['Backend Developer Intern'],
-        priority: 'Medium',
-        difficulty: 2,
-        time: 30
-      },
-      {
-        title: 'Optimize database queries',
-        description: 'Improve SQL query performance for faster data retrieval.',
-        roles: ['Database Administrator'],
-        priority: 'Medium',
-        difficulty: 3,
-        time: 45
-      },
-      {
-        title: 'Design responsive UI',
-        description: 'Create a mobile-friendly interface for the dashboard.',
-        roles: ['UX/UI Designer'],
-        priority: 'Low',
-        difficulty: 2,
-        time: 30
-      },
-      {
-        title: 'Create graphic assets for the app',
-        description: 'Design icons and illustrations for the application.',
-        roles: ['Graphic Designer'],
-        priority: 'Medium',
-        difficulty: 3,
-        time: 40
-      },
-      {
-        title: 'Set up project roadmap',
-        description: 'Outline project timeline and milestones.',
-        roles: ['Project Manager'],
-        priority: 'High',
-        difficulty: 4,
-        time: 70
-      },
-      {
-        title: 'Define user stories and requirements',
-        description: 'Gather and document product requirements for the team.',
-        roles: ['Product Owner'],
-        priority: 'High',
-        difficulty: 4,
-        time: 60
-      },
-      {
-        title: 'Implement caching mechanism',
-        description: 'Add caching to optimize application performance.',
-        roles: ['Backend Developer', 'Backend Developer Intern'],
-        priority: 'Medium',
-        difficulty: 3,
-        time: 50
-      },
-      {
-        title: 'Improve UI accessibility',
-        description: 'Enhance UI for better accessibility.',
-        roles: ['UX/UI Designer'],
-        priority: 'Medium',
-        difficulty: 3,
-        time: 35
-      },
-      {
-        title: 'Attend company meeting',
-        description: 'Participate in weekly meeting, share updates.',
-        roles: allAllowedRoles,
-        priority: 'Low',
-        difficulty: 1,
-        time: 20
-      },
-      {
-        title: 'Perform system maintenance',
-        description: 'Conduct maintenance and updates for entire system.',
-        roles: allAllowedRoles,
-        priority: 'Low',
-        difficulty: 2,
-        time: 50
-      }
-    ];
-
+    if (!tickets || tickets.length === 0) return;
     const newTicket = tickets[Math.floor(Math.random() * tickets.length)];
     newTicket.id = Math.random().toString(36).substr(2, 9);
     newTicket.remainingTime = newTicket.time;
     newTicket.startTime = Date.now();
     setCurrentTicket(newTicket);
-  }, []);
+  }, [tickets]);
 
   // If no ticket, generate one
   useEffect(() => {
-    if (!currentTicket) {
+    if (!currentTicket && tickets.length > 0) {
       generateNewTicket();
     }
-  }, [currentTicket, generateNewTicket]);
+  }, [currentTicket, tickets, generateNewTicket]);
 
-  // Generate company details on mount
-  useEffect(() => {
-    const companies = [
-      'TechNova Solutions: AI-driven software development',
-      'GreenLeaf Innovations: Sustainable energy solutions',
-      'QuantumLink Systems: Quantum computing research',
-      'BioGenix Labs: Advanced biotechnology and genetics',
-      'CyberShield Securities: Cutting-edge cybersecurity services'
-    ];
-    setCompanyDetails(companies[Math.floor(Math.random() * companies.length)]);
-  }, []);
-
+  // ----------------------------------------------------------------------
   // Timer + progress updates
+  // ----------------------------------------------------------------------
   useEffect(() => {
     timerRef.current = setInterval(() => {
+      // Skip if roles not yet loaded
+      if (!roles || Object.keys(roles).length === 0) return;
+
       // Decrement remaining time for each assigned ticket
       Object.values(roles).forEach((roleList) => {
         roleList.forEach((role) => {
@@ -272,6 +122,7 @@ const ProjectSimulationGame = () => {
               }
             })
             .filter((ticket) => ticket !== null);
+
           role.completedTickets.push(...completedTickets);
         });
       });
@@ -281,20 +132,22 @@ const ProjectSimulationGame = () => {
         (total, roleList) =>
           total +
           roleList.reduce(
-            (roleTotal, role) => roleTotal + role.completedTickets.length + role.ongoingTickets.length,
+            (roleTotal, role) =>
+              roleTotal + role.completedTickets.length + role.ongoingTickets.length,
             0
           ),
         0
       );
 
-      const completedTickets = Object.values(roles).reduce(
+      const completedTicketsCount = Object.values(roles).reduce(
         (total, roleList) =>
           total +
           roleList.reduce((roleTotal, role) => roleTotal + role.completedTickets.length, 0),
         0
       );
 
-      const progressPercentage = totalTickets === 0 ? 0 : (completedTickets / totalTickets) * 100;
+      const progressPercentage =
+        totalTickets === 0 ? 0 : (completedTicketsCount / totalTickets) * 100;
       setProgress(progressPercentage);
 
       // End game if progress hits 100%
@@ -313,9 +166,11 @@ const ProjectSimulationGame = () => {
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [currentTicket, generateNewTicket]);
+  }, [roles, currentTicket, generateNewTicket]);
 
+  // ----------------------------------------------------------------------
   // Drag + Drop
+  // ----------------------------------------------------------------------
   const handleDragStart = (e, ticket) => {
     e.dataTransfer.setData('text/plain', JSON.stringify(ticket));
     setIsDragging(true);
@@ -364,12 +219,16 @@ const ProjectSimulationGame = () => {
     setHighlightedRole(null);
   };
 
-  // Format seconds to D/H/M
+  // ----------------------------------------------------------------------
+  // Utility for formatting time (for the role's ongoing tickets)
+  // ----------------------------------------------------------------------
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / 60);
     const hours = Math.floor((seconds % 60) / 2.5);
     const minutes = Math.floor(((seconds % 60) % 2.5) * 24);
-    return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}, ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${
+      hours !== 1 ? 's' : ''
+    }, ${minutes} minute${minutes !== 1 ? 's' : ''}`;
   };
 
   const handleTimeUp = () => {
@@ -388,14 +247,17 @@ const ProjectSimulationGame = () => {
     return 'neutral';
   };
 
+  // ----------------------------------------------------------------------
   // If the PD matching game isn't finished, show that first
+  // ----------------------------------------------------------------------
   if (!isPdChallengeComplete) {
     return <PDMatchingGame onComplete={handlePdGameComplete} />;
   }
 
+  // ----------------------------------------------------------------------
   // If the simulation is complete, show the StatsPopup
+  // ----------------------------------------------------------------------
   if (isGameComplete) {
-    // total simulation time
     const simulationTime = simulationStartTime
       ? ((Date.now() - simulationStartTime) / 1000).toFixed(2)
       : '0';
@@ -413,21 +275,24 @@ const ProjectSimulationGame = () => {
     );
   }
 
+  // ----------------------------------------------------------------------
+  // Render
+  // ----------------------------------------------------------------------
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
-        backgroundColor: '#f8fafc' // subtle background
+        backgroundColor: '#f8fafc'
       }}
     >
       {/* Header Section */}
       <header
         style={{
-          backgroundColor: '#374151', // a darker gray
+          backgroundColor: '#374151',
           padding: '1rem',
-          color: '#f9fafb', // near-white text
+          color: '#f9fafb',
           display: 'flex',
           flexDirection: 'column',
           gap: '0.5rem'
@@ -439,7 +304,7 @@ const ProjectSimulationGame = () => {
             style={{
               flex: 1,
               height: '1rem',
-              backgroundColor: '#6b7280', // medium gray
+              backgroundColor: '#6b7280',
               borderRadius: '9999px',
               marginRight: '1rem',
               overflow: 'hidden'
@@ -448,7 +313,7 @@ const ProjectSimulationGame = () => {
             <div
               style={{
                 height: '100%',
-                backgroundColor: '#10b981', // green
+                backgroundColor: '#10b981',
                 width: `${progress}%`,
                 transition: 'width 0.3s ease'
               }}
@@ -469,7 +334,7 @@ const ProjectSimulationGame = () => {
           </div>
         </div>
 
-        {/* Sub-header row */}
+        {/* Company Details */}
         <div style={{ marginLeft: '0.5rem', fontSize: '0.875rem' }}>
           <strong>Company:</strong> {companyDetails}
         </div>
@@ -485,7 +350,9 @@ const ProjectSimulationGame = () => {
             boxShadow: 'inset -1px 0 2px rgba(0,0,0,0.05)'
           }}
         >
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: '600' }}>Current Ticket</h2>
+          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: '600' }}>
+            Current Ticket
+          </h2>
           {currentTicket && (
             <div
               style={{
@@ -499,8 +366,12 @@ const ProjectSimulationGame = () => {
               onDragStart={(e) => handleDragStart(e, currentTicket)}
               onDragEnd={handleDragEnd}
             >
-              <h3 style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{currentTicket.title}</h3>
-              <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>{currentTicket.description}</p>
+              <h3 style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                {currentTicket.title}
+              </h3>
+              <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                {currentTicket.description}
+              </p>
               <div style={{ marginBottom: '0.5rem', fontSize: '0.85rem' }}>
                 <span style={{ marginRight: '0.5rem' }}>
                   <strong>Priority:</strong> {currentTicket.priority}
@@ -509,10 +380,14 @@ const ProjectSimulationGame = () => {
                   <strong>Difficulty:</strong> {currentTicket.difficulty}
                 </span>
                 <span>
-                  <strong>Allocated:</strong> {(currentTicket.time / 60).toFixed(2)} days
+                  <strong>Allocated:</strong>{' '}
+                  {(currentTicket.time / 60).toFixed(2)} days
                 </span>
               </div>
-              <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
+              <CountdownTimer
+                minutes={currentTicket.time / 60}
+                onTimeUp={handleTimeUp}
+              />
             </div>
           )}
         </aside>
@@ -526,7 +401,7 @@ const ProjectSimulationGame = () => {
             padding: '1rem'
           }}
         >
-          {Object.entries(roles).map(([category, rolesList]) => (
+          {Object.entries(roles || {}).map(([category, rolesList]) => (
             <div key={category} style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 4rem)' }}>
               <h2
                 style={{
@@ -569,8 +444,12 @@ const ProjectSimulationGame = () => {
                       onDragOver={(e) => e.preventDefault()}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>{role.icon}</span>
-                        <h3 style={{ fontWeight: 'bold', fontSize: '0.9rem', margin: 0 }}>{role.name}</h3>
+                        <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>
+                          {role.icon}
+                        </span>
+                        <h3 style={{ fontWeight: 'bold', fontSize: '0.9rem', margin: 0 }}>
+                          {role.name}
+                        </h3>
                       </div>
                       <p style={{ fontSize: '0.8rem', margin: '0.25rem 0' }}>
                         <strong>Experience:</strong> {role.experience} years

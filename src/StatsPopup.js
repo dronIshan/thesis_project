@@ -1,75 +1,83 @@
+// StatsPopup.js
 import React from 'react';
 
-const StatsPopup = ({ score, correctAssignments, falseSelections, decisionTimes, pdStats, simulationTime, onRestart }) => {
-  // Calculate simulation decision stats.
+const StatsPopup = ({
+  score,
+  correctAssignments,
+  falseSelections,
+  decisionTimes,
+  pdStats,
+  simulationTime,
+  onRestart
+}) => {
+  // Calculate decision stats
   const totalDecisions = decisionTimes.length;
-  const totalDecisionTime = decisionTimes.reduce((acc, time) => acc + time, 0);
-  const averageDecisionTime = totalDecisions > 0 ? (totalDecisionTime / totalDecisions / 1000).toFixed(2) : 0; // seconds
+  const totalDecisionTime = decisionTimes.reduce((acc, t) => acc + t, 0);
+  const averageDecisionTime =
+    totalDecisions > 0 ? (totalDecisionTime / totalDecisions / 1000).toFixed(2) : '0.00';
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          padding: '2rem',
-          borderRadius: '0.5rem',
-          minWidth: '300px',
-          boxShadow: '0 1px 10px rgba(0,0,0,0.3)'
-        }}
-      >
-        <h2 style={{ marginBottom: '1rem' }}>Game Complete!</h2>
-        <div>
-          <h3>Product Simulation Game Stats</h3>
-          <p>
-            <strong>Total Score:</strong> {score}
-          </p>
-          <p>
-            <strong>Correct Assignments:</strong> {correctAssignments}
-          </p>
-          <p>
-            <strong>False Selections:</strong> {falseSelections}
-          </p>
-          <p>
-            <strong>Total Decisions Made:</strong> {totalDecisions}
-          </p>
-          <p>
-            <strong>Average Decision Time:</strong> {averageDecisionTime} seconds
-          </p>
-          <p>
-            <strong>Total Simulation Time:</strong> {simulationTime} seconds
-          </p>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-11/12 max-w-3xl p-8">
+        <h2 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">
+          🎉 Game Complete!
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Simulation Stats */}
+          <div>
+            <h3 className="text-2xl font-semibold text-gray-700 mb-4">
+             Requirement Simulation Game Stats
+            </h3>
+            <ul className="space-y-2 text-gray-600">
+              <li>
+                <span className="font-medium">Total Score:</span> {score}
+              </li>
+              <li>
+                <span className="font-medium">Correct Assignments:</span> {correctAssignments}
+              </li>
+              <li>
+                <span className="font-medium">False Selections:</span> {falseSelections}
+              </li>
+              <li>
+                <span className="font-medium">Total Decisions Made:</span> {totalDecisions}
+              </li>
+              <li>
+                <span className="font-medium">Avg. Decision Time:</span> {averageDecisionTime} s
+              </li>
+              <li>
+                <span className="font-medium">Total Simulation Time:</span> {simulationTime} s
+              </li>
+            </ul>
+          </div>
+
+          {/* PD Challenge Stats */}
+          <div>
+            <h3 className="text-2xl font-semibold text-gray-700 mb-4">
+              Product Design Challenge Game  Stats
+            </h3>
+            <ul className="space-y-2 text-gray-600">
+              <li>
+                <span className="font-medium">Time Taken:</span> {pdStats.timeTaken} s
+              </li>
+              <li>
+                <span className="font-medium">Correct Matches:</span> {pdStats.correctMatches}
+              </li>
+              <li>
+                <span className="font-medium">False Matches:</span> {pdStats.falseMatches}
+              </li>
+            </ul>
+          </div>
         </div>
-        <hr style={{ margin: '1rem 0' }} />
-        <div>
-          <h3>Product Design Challenge Stats</h3>
-          <p>
-            <strong>Time Taken:</strong> {pdStats.timeTaken} seconds
-          </p>
-          <p>
-            <strong>Correct Matches:</strong> {pdStats.correctMatches}
-          </p>
-          <p>
-            <strong>False Matches:</strong> {pdStats.falseMatches}
-          </p>
+
+        <div className="mt-8 text-center">
+          <button
+            onClick={onRestart}
+            className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-shadow shadow-md hover:shadow-lg"
+          >
+            Restart Game
+          </button>
         </div>
-        <button
-          onClick={onRestart}
-          style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
-        >
-          Restart Game
-        </button>
       </div>
     </div>
   );
