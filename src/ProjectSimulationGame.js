@@ -368,71 +368,77 @@ const ProjectSimulationGame = () => {
           )}
         </div>
 
-        {/* Team Members Grid */}
+        {/* Team Members Grid - Updated with scrolling */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(roles || {}).map(([category, rolesList]) => (
-            <div key={category} className="bg-gray-900 border border-green-500 rounded-lg p-4">
+            <div 
+              key={category} 
+              className="bg-gray-900 border border-green-500 rounded-lg p-4 flex flex-col"
+              style={{ maxHeight: '70vh' }}
+            >
               <h2 className="text-lg font-bold text-green-400 mb-3 border-b border-green-800 pb-2">
                 {category.toUpperCase()}
               </h2>
               
-              <div className="space-y-4">
-                {rolesList.map((role) => {
-                  const isHighlighted = highlightedRole === role.name;
-                  const isOverloaded = role.ongoingTickets.length >= role.load;
-                  const emotion = getEmotion(role);
-                  
-                  return (
-                    <div
-                      key={role.name}
-                      className={`border rounded-lg p-3 transition-all ${isHighlighted ? 'border-blue-400 bg-blue-900 bg-opacity-30' : 'border-gray-700 bg-gray-800'} ${isOverloaded && isDragging ? 'border-red-400 bg-red-900 bg-opacity-30' : ''}`}
-                      onDrop={(e) => handleDrop(e, role)}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setHighlightedRole(role.name);
-                      }}
-                      onDragLeave={() => setHighlightedRole(null)}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-bold text-green-300">{role.name}</h3>
-                          <p className="text-xs text-gray-400">{role.role}</p>
+              <div className="overflow-y-auto flex-1 pr-2">
+                <div className="space-y-4">
+                  {rolesList.map((role) => {
+                    const isHighlighted = highlightedRole === role.name;
+                    const isOverloaded = role.ongoingTickets.length >= role.load;
+                    const emotion = getEmotion(role);
+                    
+                    return (
+                      <div
+                        key={role.name}
+                        className={`border rounded-lg p-3 transition-all ${isHighlighted ? 'border-blue-400 bg-blue-900 bg-opacity-30' : 'border-gray-700 bg-gray-800'} ${isOverloaded && isDragging ? 'border-red-400 bg-red-900 bg-opacity-30' : ''}`}
+                        onDrop={(e) => handleDrop(e, role)}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setHighlightedRole(role.name);
+                        }}
+                        onDragLeave={() => setHighlightedRole(null)}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-bold text-green-300">{role.name}</h3>
+                            <p className="text-xs text-gray-400">{role.role}</p>
+                          </div>
+                          <EmotionFace emotion={emotion} />
                         </div>
-                        <EmotionFace emotion={emotion} />
+                        
+                        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                          <div>
+                            <span className="text-gray-500">Load:</span> {role.ongoingTickets.length}/{role.load}
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Max Diff:</span> {role.maxDifficulty}
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Exp:</span> {role.experience}y
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Skills:</span> {role.skills.length}
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs">
+                          <div className="text-green-500 mb-1">ONGOING:</div>
+                          {role.ongoingTickets.length > 0 ? (
+                            <ul className="space-y-1">
+                              {role.ongoingTickets.map((ticket, idx) => (
+                                <li key={idx} className="text-gray-400">
+                                  • {ticket.title} <span className="text-gray-600">({formatTime(ticket.remainingTime)})</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-600 italic">No active tickets</p>
+                          )}
+                        </div>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                        <div>
-                          <span className="text-gray-500">Load:</span> {role.ongoingTickets.length}/{role.load}
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Max Diff:</span> {role.maxDifficulty}
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Exp:</span> {role.experience}y
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Skills:</span> {role.skills.length}
-                        </div>
-                      </div>
-                      
-                      <div className="text-xs">
-                        <div className="text-green-500 mb-1">ONGOING:</div>
-                        {role.ongoingTickets.length > 0 ? (
-                          <ul className="space-y-1">
-                            {role.ongoingTickets.map((ticket, idx) => (
-                              <li key={idx} className="text-gray-400">
-                                • {ticket.title} <span className="text-gray-600">({formatTime(ticket.remainingTime)})</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-gray-600 italic">No active tickets</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           ))}
