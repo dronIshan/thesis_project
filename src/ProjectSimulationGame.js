@@ -350,16 +350,18 @@ const ProjectSimulationGame = () => {
                 <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
               </div>
               
-              <div>
-                <h4 className="text-xs text-green-500 mb-1">REQUIRED ROLES:</h4>
-                <div className="flex flex-wrap gap-1">
-                  {currentTicket.roles.map((role, i) => (
-                    <span key={i} className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300">
-                      {role}
-                    </span>
-                  ))}
+              {isPracticeMode && (
+                <div>
+                  <h4 className="text-xs text-green-500 mb-1">REQUIRED ROLES:</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {currentTicket.roles.map((role, i) => (
+                      <span key={i} className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300">
+                        {role}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             <div className="bg-gray-800 border border-dashed border-gray-600 rounded p-8 text-center text-gray-500">
