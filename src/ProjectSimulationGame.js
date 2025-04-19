@@ -26,9 +26,95 @@ const ProjectSimulationGame = () => {
   const [simulationStartTime, setSimulationStartTime] = useState(null);
   const [message, setMessage] = useState('Drag tickets to the appropriate team members');
   const [incorrectDrop, setIncorrectDrop] = useState(false);
+  const [stakeholderMood, setStakeholderMood] = useState(0); // 0-5 scale
+  const [stakeholderMessage, setStakeholderMessage] = useState('');
+  const [stakeholderDisabled, setStakeholderDisabled] = useState(false);
+  const [showStakeholderHint, setShowStakeholderHint] = useState(false);
+  const [isGamePaused, setIsGamePaused] = useState(false);
+  const [stakeholderReadTime, setStakeholderReadTime] = useState(120);
+  const [stakeholderReadTimer, setStakeholderReadTimer] = useState(null);
 
   const timerRef = useRef();
   const canvasRef = useRef(null);
+
+  // Helper function to get stakeholder emotion based on mood
+  const getStakeholderEmotion = (mood) => {
+    const emotions = [
+      'happy',      // 0 - Very happy
+      'happy',      // 1 - Happy
+      'neutral',    // 2 - Neutral
+      'angry',      // 3 - Slightly angry
+      'angry',      // 4 - Angry
+      'disgusted'   // 5 - Very angry
+    ];
+    return emotions[Math.min(mood, emotions.length - 1)];
+  };
+
+  // Function to get stakeholder hint from backend
+  const getStakeholderHint = async () => {
+    if (!currentTicket || stakeholderDisabled) return;
+    
+    try {
+      const response = await fetch('https://ishanvimukthi.pythonanywhere.com/api/stakeholder-npc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ticket: currentTicket,
+          company_context: companyDetails
+        }),
+      });
+      
+      const data = await response.json();
+      if (data.message) {
+        setStakeholderMessage(data.message);
+        setShowStakeholderHint(true);
+        
+        // Update mood and check for penalty
+        const newMood = stakeholderMood + 1;
+        setStakeholderMood(newMood);
+        
+        if (newMood >= 5) {
+          setScore(prev => prev - 50);
+          setStakeholderDisabled(true);
+          setStakeholderMessage("I'm done helping! Figure it out yourself!");
+        }
+      }
+    } catch (error) {
+      console.error('Error getting stakeholder hint:', error);
+      setStakeholderMessage("Sorry, I can't help right now. Try again later.");
+    }
+  };
+
+  // Function to dismiss stakeholder hint early
+  const dismissStakeholderHint = () => {
+    clearInterval(stakeholderReadTimer);
+    setIsGamePaused(false);
+    setShowStakeholderHint(false);
+    setStakeholderReadTime(120);
+  };
+
+  // Effect for stakeholder reading timer
+  useEffect(() => {
+    if (showStakeholderHint) {
+      setIsGamePaused(true);
+      const timer = setInterval(() => {
+        setStakeholderReadTime(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setIsGamePaused(false);
+            setShowStakeholderHint(false);
+            return 120;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      setStakeholderReadTimer(timer);
+      
+      return () => clearInterval(timer);
+    }
+  }, [showStakeholderHint]);
 
   // CRT screen effect
   useEffect(() => {
@@ -81,6 +167,7 @@ const ProjectSimulationGame = () => {
     newTicket.remainingTime = newTicket.time;
     newTicket.startTime = Date.now();
     setCurrentTicket(newTicket);
+    setShowStakeholderHint(false);
   }, [tickets]);
 
   useEffect(() => {
@@ -90,7 +177,7 @@ const ProjectSimulationGame = () => {
   }, [currentTicket, tickets, generateNewTicket, isPdChallengeComplete]);
 
   useEffect(() => {
-    if (!isPdChallengeComplete) return;
+    if (!isPdChallengeComplete || isGamePaused) return;
     timerRef.current = setInterval(() => {
       if (!roles || Object.keys(roles).length === 0) return;
       Object.values(roles).forEach((roleList) => {
@@ -139,7 +226,7 @@ const ProjectSimulationGame = () => {
       }
     }, 1000);
     return () => clearInterval(timerRef.current);
-  }, [roles, currentTicket, generateNewTicket, isPdChallengeComplete]);
+  }, [roles, currentTicket, generateNewTicket, isPdChallengeComplete, isGamePaused]);
 
   const handleDragStart = (e, ticket) => {
     e.dataTransfer.setData('text/plain', JSON.stringify(ticket));
@@ -158,6 +245,8 @@ const ProjectSimulationGame = () => {
     const decisionTime = Date.now() - ticket.startTime;
     setDecisionTimes((prev) => [...prev, decisionTime]);
     
+    let isCorrectAssignment = false;
+    
     if (
       ticket.roles.includes(role.name) &&
       role.ongoingTickets.length < role.load &&
@@ -169,6 +258,7 @@ const ProjectSimulationGame = () => {
       setMessage('✅ Perfect assignment! Generating new ticket...');
       setTimeout(() => setMessage('Drag tickets to the appropriate team members'), 2000);
       generateNewTicket();
+      isCorrectAssignment = true;
     } else if (
       ticket.roles.includes(role.name) &&
       role.ongoingTickets.length < role.load &&
@@ -182,6 +272,7 @@ const ProjectSimulationGame = () => {
       setMessage('⚠️ Challenging assignment - time increased!');
       setTimeout(() => setMessage('Drag tickets to the appropriate team members'), 2000);
       generateNewTicket();
+      isCorrectAssignment = true;
     } else {
       setScore((prev) => prev - 5);
       setFalseSelections((prev) => prev + 1);
@@ -192,6 +283,19 @@ const ProjectSimulationGame = () => {
         setMessage('Drag tickets to the appropriate team members');
       }, 2000);
     }
+    
+    // Update stakeholder mood for incorrect assignments
+    if (!isCorrectAssignment) {
+      const newMood = stakeholderMood + 1;
+      setStakeholderMood(newMood);
+      
+      if (newMood >= 5) {
+        setScore(prev => prev - 50);
+        setStakeholderDisabled(true);
+        setStakeholderMessage("Too many mistakes! I'm not helping anymore!");
+      }
+    }
+    
     setIsDragging(false);
     setHighlightedRole(null);
   };
@@ -318,56 +422,120 @@ const ProjectSimulationGame = () => {
       </header>
 
       <main className="relative z-10 container mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Current Ticket Panel */}
-        <div className="lg:col-span-1 bg-gray-900 border border-green-500 rounded-lg p-4 shadow-lg">
-          <h2 className="text-lg font-bold text-green-400 mb-4 border-b border-green-800 pb-2">
-            CURRENT TICKET
-          </h2>
-          
-          {currentTicket ? (
-            <div 
-              className={`bg-gray-800 border ${isDragging ? 'border-blue-400' : 'border-green-700'} rounded p-4 transition-all duration-200`}
-              draggable
-              onDragStart={(e) => handleDragStart(e, currentTicket)}
-              onDragEnd={handleDragEnd}
-            >
-              <h3 className="font-bold text-green-300 mb-2">{currentTicket.title}</h3>
-              <p className="text-sm text-gray-400 mb-3">{currentTicket.description}</p>
-              
-              <div className="flex flex-wrap gap-2 mb-3">
-                <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(currentTicket.priority)}`}>
-                  {currentTicket.priority}
-                </span>
-                <span className="px-2 py-1 rounded text-xs bg-purple-900 text-purple-300">
-                  {currentTicket.difficulty}/10
-                </span>
-                <span className="px-2 py-1 rounded text-xs bg-blue-900 text-blue-300">
-                  {(currentTicket.time / 60).toFixed(1)} days
-                </span>
-              </div>
-              
-              <div className="mb-3">
-                <CountdownTimer minutes={currentTicket.time / 60} onTimeUp={handleTimeUp} />
-              </div>
-              
-              {isPracticeMode && (
-                <div>
-                  <h4 className="text-xs text-green-500 mb-1">REQUIRED ROLES:</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {currentTicket.roles.map((role, i) => (
-                      <span key={i} className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300">
-                        {role}
-                      </span>
-                    ))}
+        {/* Left sidebar with Current Ticket and Stakeholder */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Current Ticket Panel */}
+          <div className="bg-gray-900 border border-green-500 rounded-lg p-4 shadow-lg">
+            <h2 className="text-lg font-bold text-green-400 mb-4 border-b border-green-800 pb-2">
+              CURRENT TICKET
+            </h2>
+            
+            {currentTicket ? (
+              <div 
+                className={`bg-gray-800 border ${isDragging ? 'border-blue-400' : 'border-green-700'} rounded p-4 transition-all duration-200`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, currentTicket)}
+                onDragEnd={handleDragEnd}
+              >
+                <h3 className="font-bold text-green-300 mb-2">{currentTicket.title}</h3>
+                <p className="text-sm text-gray-400 mb-3">{currentTicket.description}</p>
+                
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(currentTicket.priority)}`}>
+                    {currentTicket.priority}
+                  </span>
+                  <span className="px-2 py-1 rounded text-xs bg-purple-900 text-purple-300">
+                    {currentTicket.difficulty}/10
+                  </span>
+                  <span className="px-2 py-1 rounded text-xs bg-blue-900 text-blue-300">
+                    {(currentTicket.time / 60).toFixed(1)} days
+                  </span>
+                </div>
+                
+                <div className="mb-3">
+                  <CountdownTimer 
+                    minutes={currentTicket.time / 60} 
+                    onTimeUp={handleTimeUp} 
+                    isPaused={isGamePaused}
+                  />
+                </div>
+                
+                {isPracticeMode && (
+                  <div>
+                    <h4 className="text-xs text-green-500 mb-1">REQUIRED ROLES:</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {currentTicket.roles.map((role, i) => (
+                        <span key={i} className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300">
+                          {role}
+                        </span>
+                      ))}
+                    </div>
                   </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-gray-800 border border-dashed border-gray-600 rounded p-8 text-center text-gray-500">
+                Generating first ticket...
+              </div>
+            )}
+          </div>
+
+          {/* Stakeholder Panel */}
+          <div className="bg-gray-900 border border-green-500 rounded-lg p-4 shadow-lg">
+            <h2 className="text-lg font-bold text-green-400 mb-3 border-b border-green-800 pb-2">
+              STAKEHOLDER
+            </h2>
+            
+            <div className="flex flex-col items-center">
+              <div className="mb-3">
+                <div className="w-32 h-32 mx-auto">
+                  <EmotionFace emotion={getStakeholderEmotion(stakeholderMood)} />
+                </div>
+              </div>
+              
+              <button
+                onClick={getStakeholderHint}
+                disabled={stakeholderDisabled || showStakeholderHint}
+                className={`px-4 py-2 rounded-md mb-3 ${
+                  stakeholderDisabled 
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                    : showStakeholderHint
+                      ? 'bg-blue-700 text-blue-200'
+                      : 'bg-green-700 hover:bg-green-600 text-green-200'
+                }`}
+              >
+                {stakeholderDisabled ? 'Disabled' : showStakeholderHint ? 'Reading Hint...' : 'Ask for Help'}
+              </button>
+              
+              {showStakeholderHint && (
+                <div className="bg-gray-800 border border-yellow-500 rounded p-3 text-sm w-full relative">
+                  <div className="absolute top-1 right-1 text-xs text-yellow-400">
+                    {Math.floor(stakeholderReadTime / 60)}:{String(stakeholderReadTime % 60).padStart(2, '0')}
+                  </div>
+                  <p className="text-yellow-300 mb-1">About: {currentTicket?.title}</p>
+                  <p className="mb-2">{stakeholderMessage}</p>
+                  <button 
+                    onClick={dismissStakeholderHint}
+                    className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-1 rounded"
+                  >
+                    Dismiss Early
+                  </button>
+                </div>
+              )}
+              
+              {stakeholderMood > 0 && !stakeholderDisabled && (
+                <div className="mt-2 text-xs text-gray-400">
+                  Patience level: {5 - stakeholderMood}/5
+                </div>
+              )}
+              
+              {stakeholderDisabled && (
+                <div className="mt-2 text-xs text-red-400">
+                  Stakeholder is frustrated and won't help anymore!
                 </div>
               )}
             </div>
-          ) : (
-            <div className="bg-gray-800 border border-dashed border-gray-600 rounded p-8 text-center text-gray-500">
-              Generating first ticket...
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Team Members Grid - Updated with scrolling */}
@@ -449,7 +617,7 @@ const ProjectSimulationGame = () => {
       
       {/* Terminal footer */}
       <footer className="relative z-10 bg-gray-900 border-t border-green-500 p-2 text-center text-xs text-green-700">
-        SYSTEM STATUS: OPERATIONAL | {new Date().toLocaleString()} | v2.4.1
+        SYSTEM STATUS: {isGamePaused ? 'PAUSED' : 'OPERATIONAL'} | {new Date().toLocaleString()} | v2.4.1
       </footer>
     </div>
   );
