@@ -1,8 +1,71 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import CountdownTimer from './CountdownTimer';
-import EmotionFace from './EmotionFace';
-import PDMatchingGame from './PDMatchingGame';
-import StatsPopup from './StatsPopup';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import CountdownTimer from "./CountdownTimer";
+import EmotionFace from "./EmotionFace";
+import PDMatchingGame from "./PDMatchingGame";
+import StatsPopup from "./StatsPopup";
+
+// Updated Phone Call Animation Component
+const PhoneCallAnimation = () => (
+  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-70">
+    <div className="text-green-400 text-xl mb-4 font-mono animate-pulse">
+      Calling stakeholder...
+    </div>
+    <div className="phone-dial">
+      <div className="dial-circle">
+        <div className="dial-hole"></div>
+      </div>
+      <div className="dial-line"></div>
+    </div>
+  </div>
+);
+
+// Updated CSS for the animation
+const pulseAnimationStyles = `
+  .phone-dial {
+    position: relative;
+    width: 120px;
+    height: 120px;
+  }
+  
+  .dial-circle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid #10b981;
+    border-radius: 50%;
+    animation: rotate 2s linear infinite;
+  }
+  
+  .dial-hole {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: #10b981;
+    border-radius: 50%;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .dial-line {
+    position: absolute;
+    width: 4px;
+    height: 40px;
+    background-color: #10b981;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  @keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
 
 const ProjectSimulationGame = () => {
   // ----------------------------------------------------------------------
@@ -10,29 +73,37 @@ const ProjectSimulationGame = () => {
   // ----------------------------------------------------------------------
   const [roles, setRoles] = useState({});
   const [tickets, setTickets] = useState([]);
-  const [companyDetails, setCompanyDetails] = useState(''); 
+  const [companyDetails, setCompanyDetails] = useState("");
   const [score, setScore] = useState(0);
   const [progress, setProgress] = useState(0);
   const [currentTicket, setCurrentTicket] = useState(null);
   const [highlightedRole, setHighlightedRole] = useState(null);
-  const [isPracticeMode, setIsPracticeMode] = useState(false);
+  const [isPracticeMode, setIsPracticeMode] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [isPdChallengeComplete, setIsPdChallengeComplete] = useState(false);
   const [falseSelections, setFalseSelections] = useState(0);
   const [correctAssignments, setCorrectAssignments] = useState(0);
   const [decisionTimes, setDecisionTimes] = useState([]);
   const [isGameComplete, setIsGameComplete] = useState(false);
-  const [pdStats, setPdStats] = useState({ timeTaken: 0, falseMatches: 0, correctMatches: 0 });
+  const [pdStats, setPdStats] = useState({
+    timeTaken: 0,
+    falseMatches: 0,
+    correctMatches: 0,
+  });
   const [simulationStartTime, setSimulationStartTime] = useState(null);
-  const [message, setMessage] = useState('Drag tickets to the appropriate team members');
+  const [message, setMessage] = useState(
+    "Drag tickets to the appropriate team members"
+  );
   const [incorrectDrop, setIncorrectDrop] = useState(false);
   const [stakeholderMood, setStakeholderMood] = useState(0); // 0-5 scale
-  const [stakeholderMessage, setStakeholderMessage] = useState('');
+  const [stakeholderMessage, setStakeholderMessage] = useState("");
   const [stakeholderDisabled, setStakeholderDisabled] = useState(false);
   const [showStakeholderHint, setShowStakeholderHint] = useState(false);
   const [isGamePaused, setIsGamePaused] = useState(false);
   const [stakeholderReadTime, setStakeholderReadTime] = useState(120);
   const [stakeholderReadTimer, setStakeholderReadTimer] = useState(null);
+  const [stakeholderChances, setStakeholderChances] = useState(5);
+  const [isCallingStakeholder, setIsCallingStakeholder] = useState(false);
 
   const timerRef = useRef();
   const canvasRef = useRef(null);
@@ -40,49 +111,62 @@ const ProjectSimulationGame = () => {
   // Helper function to get stakeholder emotion based on mood
   const getStakeholderEmotion = (mood) => {
     const emotions = [
-      'happy',      // 0 - Very happy
-      'happy',      // 1 - Happy
-      'neutral',    // 2 - Neutral
-      'angry',      // 3 - Slightly angry
-      'angry',      // 4 - Angry
-      'disgusted'   // 5 - Very angry
+      "happy", // 0 - Very happy
+      "happy", // 1 - Happy
+      "neutral", // 2 - Neutral
+      "angry", // 3 - Slightly angry
+      "angry", // 4 - Angry
+      "disgusted", // 5 - Very angry
     ];
     return emotions[Math.min(mood, emotions.length - 1)];
   };
 
   // Function to get stakeholder hint from backend
   const getStakeholderHint = async () => {
-    if (!currentTicket || stakeholderDisabled) return;
-    
+    if (!currentTicket || stakeholderDisabled || stakeholderChances <= 0)
+      return;
+
+    setIsCallingStakeholder(true);
+
     try {
-      const response = await fetch('https://ishanvimukthi.pythonanywhere.com/api/stakeholder-npc', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ticket: currentTicket,
-          company_context: companyDetails
-        }),
-      });
-      
+      const response = await fetch(
+        "https://ishanvimukthi.pythonanywhere.com/api/stakeholder-npc",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ticket: currentTicket,
+            company_context: companyDetails,
+          }),
+        }
+      );
+
       const data = await response.json();
+      setIsCallingStakeholder(false);
+
       if (data.message) {
         setStakeholderMessage(data.message);
         setShowStakeholderHint(true);
-        
-        // Update mood and check for penalty
-        const newMood = stakeholderMood + 1;
+
+        // Decrement chances and update mood
+        const newChances = stakeholderChances - 1;
+        setStakeholderChances(newChances);
+
+        // Update mood based on remaining chances
+        const newMood = 5 - newChances;
         setStakeholderMood(newMood);
-        
-        if (newMood >= 5) {
-          setScore(prev => prev - 50);
+
+        if (newChances <= 0) {
+          setScore((prev) => prev - 50);
           setStakeholderDisabled(true);
           setStakeholderMessage("I'm done helping! Figure it out yourself!");
         }
       }
     } catch (error) {
-      console.error('Error getting stakeholder hint:', error);
+      setIsCallingStakeholder(false);
+      console.error("Error getting stakeholder hint:", error);
       setStakeholderMessage("Sorry, I can't help right now. Try again later.");
     }
   };
@@ -100,7 +184,7 @@ const ProjectSimulationGame = () => {
     if (showStakeholderHint) {
       setIsGamePaused(true);
       const timer = setInterval(() => {
-        setStakeholderReadTime(prev => {
+        setStakeholderReadTime((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
             setIsGamePaused(false);
@@ -111,7 +195,7 @@ const ProjectSimulationGame = () => {
         });
       }, 1000);
       setStakeholderReadTimer(timer);
-      
+
       return () => clearInterval(timer);
     }
   }, [showStakeholderHint]);
@@ -119,34 +203,34 @@ const ProjectSimulationGame = () => {
   // CRT screen effect
   useEffect(() => {
     if (!canvasRef.current) return;
-    
+
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    
+
     // Create scanlines effect
     const drawScanlines = () => {
-      ctx.fillStyle = 'rgba(0, 255, 0, 0.05)';
+      ctx.fillStyle = "rgba(0, 255, 0, 0.05)";
       for (let y = 0; y < canvas.height; y += 2) {
         ctx.fillRect(0, y, canvas.width, 1);
       }
     };
-    
+
     // Create flickering effect
     const flicker = () => {
       ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.1})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     };
-    
+
     const animate = () => {
       flicker();
       drawScanlines();
       requestAnimationFrame(animate);
     };
-    
+
     animate();
-    
+
     return () => cancelAnimationFrame(animate);
   }, []);
 
@@ -155,9 +239,13 @@ const ProjectSimulationGame = () => {
     setPdStats(pdStats || { timeTaken: 0, falseMatches: 0, correctMatches: 0 });
     setRoles(simulationData.roles || {});
     setTickets(simulationData.tickets || []);
-    setCompanyDetails(simulationData.companyDetails || '');
+    setCompanyDetails(simulationData.companyDetails || "");
     setIsPdChallengeComplete(true);
     setSimulationStartTime(Date.now());
+    // Reset stakeholder chances when new game starts
+    setStakeholderChances(5);
+    setStakeholderMood(0);
+    setStakeholderDisabled(false);
   };
 
   const generateNewTicket = useCallback(() => {
@@ -201,7 +289,9 @@ const ProjectSimulationGame = () => {
           total +
           roleList.reduce(
             (roleTotal, role) =>
-              roleTotal + role.completedTickets.length + role.ongoingTickets.length,
+              roleTotal +
+              role.completedTickets.length +
+              role.ongoingTickets.length,
             0
           ),
         0
@@ -209,10 +299,14 @@ const ProjectSimulationGame = () => {
       const completedTicketsCount = Object.values(roles).reduce(
         (total, roleList) =>
           total +
-          roleList.reduce((roleTotal, role) => roleTotal + role.completedTickets.length, 0),
+          roleList.reduce(
+            (roleTotal, role) => roleTotal + role.completedTickets.length,
+            0
+          ),
         0
       );
-      const progressPercentage = totalTickets === 0 ? 0 : (completedTicketsCount / totalTickets) * 100;
+      const progressPercentage =
+        totalTickets === 0 ? 0 : (completedTicketsCount / totalTickets) * 100;
       setProgress(progressPercentage);
       if (progressPercentage >= 100) {
         setIsGameComplete(true);
@@ -226,10 +320,16 @@ const ProjectSimulationGame = () => {
       }
     }, 1000);
     return () => clearInterval(timerRef.current);
-  }, [roles, currentTicket, generateNewTicket, isPdChallengeComplete, isGamePaused]);
+  }, [
+    roles,
+    currentTicket,
+    generateNewTicket,
+    isPdChallengeComplete,
+    isGamePaused,
+  ]);
 
   const handleDragStart = (e, ticket) => {
-    e.dataTransfer.setData('text/plain', JSON.stringify(ticket));
+    e.dataTransfer.setData("text/plain", JSON.stringify(ticket));
     setIsDragging(true);
     setMessage(`Assigning: ${ticket.title}`);
   };
@@ -241,22 +341,29 @@ const ProjectSimulationGame = () => {
 
   const handleDrop = (e, role) => {
     e.preventDefault();
-    const ticket = JSON.parse(e.dataTransfer.getData('text'));
+    const ticket = JSON.parse(e.dataTransfer.getData("text"));
     const decisionTime = Date.now() - ticket.startTime;
     setDecisionTimes((prev) => [...prev, decisionTime]);
-    
+
+    // extra 20 points if easy mode is OFF
+    const extraPoints = !isPracticeMode ? 20 : 0;
+
     let isCorrectAssignment = false;
-    
+
     if (
       ticket.roles.includes(role.name) &&
       role.ongoingTickets.length < role.load &&
       ticket.difficulty <= role.maxDifficulty
     ) {
+      // perfect assignment
       role.ongoingTickets.push(ticket);
-      setScore((prev) => prev + 10);
+      setScore((prev) => prev + 10 + extraPoints);
       setCorrectAssignments((prev) => prev + 1);
-      setMessage('✅ Perfect assignment! Generating new ticket...');
-      setTimeout(() => setMessage('Drag tickets to the appropriate team members'), 2000);
+      setMessage("✅ Perfect assignment! Generating new ticket...");
+      setTimeout(
+        () => setMessage("Drag tickets to the appropriate team members"),
+        2000
+      );
       generateNewTicket();
       isCorrectAssignment = true;
     } else if (
@@ -264,38 +371,43 @@ const ProjectSimulationGame = () => {
       role.ongoingTickets.length < role.load &&
       ticket.difficulty > role.maxDifficulty
     ) {
+      // challenging assignment
       ticket.time *= 1.5;
       ticket.remainingTime = ticket.time;
       role.ongoingTickets.push(ticket);
-      setScore((prev) => prev + 5);
+      setScore((prev) => prev + 5 + extraPoints);
       setCorrectAssignments((prev) => prev + 1);
-      setMessage('⚠️ Challenging assignment - time increased!');
-      setTimeout(() => setMessage('Drag tickets to the appropriate team members'), 2000);
+      setMessage("⚠️ Challenging assignment - time increased!");
+      setTimeout(
+        () => setMessage("Drag tickets to the appropriate team members"),
+        2000
+      );
       generateNewTicket();
       isCorrectAssignment = true;
     } else {
+      // incorrect assignment
       setScore((prev) => prev - 5);
       setFalseSelections((prev) => prev + 1);
-      setMessage('❌ Incorrect assignment! Try again.');
+      setMessage("❌ Incorrect assignment! Try again.");
       setIncorrectDrop(true);
       setTimeout(() => {
         setIncorrectDrop(false);
-        setMessage('Drag tickets to the appropriate team members');
+        setMessage("Drag tickets to the appropriate team members");
       }, 2000);
     }
-    
+
     // Update stakeholder mood for incorrect assignments
     if (!isCorrectAssignment) {
-      const newMood = stakeholderMood + 1;
+      const newMood = Math.min(stakeholderMood + 1, 5);
       setStakeholderMood(newMood);
-      
+
       if (newMood >= 5) {
-        setScore(prev => prev - 50);
+        setScore((prev) => prev - 50);
         setStakeholderDisabled(true);
         setStakeholderMessage("Too many mistakes! I'm not helping anymore!");
       }
     }
-    
+
     setIsDragging(false);
     setHighlightedRole(null);
   };
@@ -311,26 +423,33 @@ const ProjectSimulationGame = () => {
     setScore((prev) => prev - 5);
     const dt = Date.now() - currentTicket.startTime;
     setDecisionTimes((prev) => [...prev, dt]);
-    setMessage('⌛ Time expired! Generating new ticket...');
-    setTimeout(() => setMessage('Drag tickets to the appropriate team members'), 2000);
+    setMessage("⌛ Time expired! Generating new ticket...");
+    setTimeout(
+      () => setMessage("Drag tickets to the appropriate team members"),
+      2000
+    );
     generateNewTicket();
   };
 
   const getEmotion = (role) => {
     const ticketCount = role.ongoingTickets.length;
-    if (ticketCount === 0) return 'happy';
-    if (ticketCount < role.load) return 'neutral';
-    if (ticketCount === role.load) return 'angry';
-    if (ticketCount > role.load) return 'sad';
-    return 'neutral';
+    if (ticketCount === 0) return "happy";
+    if (ticketCount < role.load) return "neutral";
+    if (ticketCount === role.load) return "angry";
+    if (ticketCount > role.load) return "sad";
+    return "neutral";
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'High': return 'bg-red-900 text-red-300';
-      case 'Medium': return 'bg-yellow-900 text-yellow-300';
-      case 'Low': return 'bg-green-900 text-green-300';
-      default: return 'bg-gray-700 text-gray-300';
+      case "High":
+        return "bg-red-900 text-red-300";
+      case "Medium":
+        return "bg-yellow-900 text-yellow-300";
+      case "Low":
+        return "bg-green-900 text-green-300";
+      default:
+        return "bg-gray-700 text-gray-300";
     }
   };
 
@@ -341,7 +460,7 @@ const ProjectSimulationGame = () => {
   if (isGameComplete) {
     const simulationTime = simulationStartTime
       ? ((Date.now() - simulationStartTime) / 1000).toFixed(2)
-      : '0';
+      : "0";
     return (
       <StatsPopup
         score={score}
@@ -357,66 +476,97 @@ const ProjectSimulationGame = () => {
 
   return (
     <div className="relative min-h-screen bg-black text-green-300 font-mono overflow-hidden">
+      {/* Add the pulse animation styles */}
+      <style>{pulseAnimationStyles}</style>
+
+      {/* Show phone call animation when calling stakeholder */}
+      {isCallingStakeholder && <PhoneCallAnimation />}
+
       {/* CRT overlay effect */}
       <canvas
         ref={canvasRef}
         className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-30 z-0"
       />
-      
+
       {/* Header */}
       <header className="relative z-10 bg-gray-900 border-b border-green-500 p-4">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <h1 className="text-xl md:text-2xl font-bold text-green-400">
-              {companyDetails || 'CyberCorp Simulation'}
+              {companyDetails || "CyberCorp Simulation"}
             </h1>
-            <p className="text-sm text-green-600">Project Management Terminal</p>
+            <p className="text-sm text-green-600">
+              Project Management Terminal
+            </p>
           </div>
-          
+
           <div className="flex flex-wrap justify-center gap-4 md:gap-8">
             <div className="text-center">
               <div className="text-green-400 text-2xl font-bold">{score}</div>
               <div className="text-xs text-green-600">SCORE</div>
             </div>
-            
+
             <div className="text-center">
-              <div className="text-blue-400 text-2xl font-bold">{correctAssignments}</div>
+              <div className="text-blue-400 text-2xl font-bold">
+                {correctAssignments}
+              </div>
               <div className="text-xs text-blue-600">CORRECT</div>
             </div>
-            
+
             <div className="text-center">
-              <div className="text-red-400 text-2xl font-bold">{falseSelections}</div>
+              <div className="text-red-400 text-2xl font-bold">
+                {falseSelections}
+              </div>
               <div className="text-xs text-red-600">ERRORS</div>
             </div>
-            
+
             <div className="flex items-center">
               <label className="flex items-center cursor-pointer">
-                <span className="mr-2 text-sm text-green-400">PRACTICE</span>
+                <span className="mr-2 text-sm text-green-400">
+                  Easy mode on — turn off to remove required roles and earn +20
+                  bonus points per ticket
+                </span>
                 <div className="relative">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only" 
+                  <input
+                    type="checkbox"
+                    className="sr-only"
                     checked={isPracticeMode}
                     onChange={(e) => setIsPracticeMode(e.target.checked)}
                   />
-                  <div className={`w-10 h-4 rounded-full shadow-inner ${isPracticeMode ? 'bg-green-500' : 'bg-gray-700'}`}></div>
-                  <div className={`absolute w-6 h-6 rounded-full shadow -left-1 -top-1 transition ${isPracticeMode ? 'bg-green-400 transform translate-x-5' : 'bg-gray-500'}`}></div>
+                  <div
+                    className={`w-10 h-4 rounded-full shadow-inner ${
+                      isPracticeMode ? "bg-green-500" : "bg-gray-700"
+                    }`}
+                  ></div>
+                  <div
+                    className={`absolute w-6 h-6 rounded-full shadow -left-1 -top-1 transition ${
+                      isPracticeMode
+                        ? "bg-green-400 transform translate-x-5"
+                        : "bg-gray-500"
+                    }`}
+                  ></div>
                 </div>
               </label>
             </div>
           </div>
         </div>
-        
+
         {/* Progress bar */}
         <div className="mt-4 w-full bg-gray-800 rounded-full h-2">
-          <div 
-            className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500" 
+          <div
+            className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
-        
+
         {/* Message display */}
-        <div className={`mt-3 p-2 text-center rounded border ${incorrectDrop ? 'border-red-500 bg-red-900 bg-opacity-30' : 'border-green-500 bg-green-900 bg-opacity-30'} transition-all`}>
+        <div
+          className={`mt-3 p-2 text-center rounded border ${
+            incorrectDrop
+              ? "border-red-500 bg-red-900 bg-opacity-30"
+              : "border-green-500 bg-green-900 bg-opacity-30"
+          } transition-all`}
+        >
           <p className="text-sm font-medium">{message}</p>
         </div>
       </header>
@@ -429,19 +579,29 @@ const ProjectSimulationGame = () => {
             <h2 className="text-lg font-bold text-green-400 mb-4 border-b border-green-800 pb-2">
               CURRENT TICKET
             </h2>
-            
+
             {currentTicket ? (
-              <div 
-                className={`bg-gray-800 border ${isDragging ? 'border-blue-400' : 'border-green-700'} rounded p-4 transition-all duration-200`}
+              <div
+                className={`bg-gray-800 border ${
+                  isDragging ? "border-blue-400" : "border-green-700"
+                } rounded p-4 transition-all duration-200`}
                 draggable
                 onDragStart={(e) => handleDragStart(e, currentTicket)}
                 onDragEnd={handleDragEnd}
               >
-                <h3 className="font-bold text-green-300 mb-2">{currentTicket.title}</h3>
-                <p className="text-sm text-gray-400 mb-3">{currentTicket.description}</p>
-                
+                <h3 className="font-bold text-green-300 mb-2">
+                  {currentTicket.title}
+                </h3>
+                <p className="text-sm text-gray-400 mb-3">
+                  {currentTicket.description}
+                </p>
+
                 <div className="flex flex-wrap gap-2 mb-3">
-                  <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(currentTicket.priority)}`}>
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${getPriorityColor(
+                      currentTicket.priority
+                    )}`}
+                  >
                     {currentTicket.priority}
                   </span>
                   <span className="px-2 py-1 rounded text-xs bg-purple-900 text-purple-300">
@@ -451,21 +611,26 @@ const ProjectSimulationGame = () => {
                     {(currentTicket.time / 60).toFixed(1)} days
                   </span>
                 </div>
-                
+
                 <div className="mb-3">
-                  <CountdownTimer 
-                    minutes={currentTicket.time / 60} 
-                    onTimeUp={handleTimeUp} 
+                  <CountdownTimer
+                    minutes={currentTicket.time / 60}
+                    onTimeUp={handleTimeUp}
                     isPaused={isGamePaused}
                   />
                 </div>
-                
+
                 {isPracticeMode && (
                   <div>
-                    <h4 className="text-xs text-green-500 mb-1">REQUIRED ROLES:</h4>
+                    <h4 className="text-xs text-green-500 mb-1">
+                      REQUIRED ROLES:
+                    </h4>
                     <div className="flex flex-wrap gap-1">
                       {currentTicket.roles.map((role, i) => (
-                        <span key={i} className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300">
+                        <span
+                          key={i}
+                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300"
+                        >
                           {role}
                         </span>
                       ))}
@@ -483,38 +648,47 @@ const ProjectSimulationGame = () => {
           {/* Stakeholder Panel */}
           <div className="bg-gray-900 border border-green-500 rounded-lg p-4 shadow-lg">
             <h2 className="text-lg font-bold text-green-400 mb-3 border-b border-green-800 pb-2">
-              STAKEHOLDER
+              {companyDetails ? `${companyDetails} STAKEHOLDER` : "STAKEHOLDER"}
             </h2>
-            
+
             <div className="flex flex-col items-center">
               <div className="mb-3">
                 <div className="w-32 h-32 mx-auto">
-                  <EmotionFace emotion={getStakeholderEmotion(stakeholderMood)} />
+                  <EmotionFace
+                    emotion={getStakeholderEmotion(stakeholderMood)}
+                  />
                 </div>
               </div>
-              
+
               <button
                 onClick={getStakeholderHint}
-                disabled={stakeholderDisabled || showStakeholderHint}
+                disabled={stakeholderDisabled || stakeholderChances <= 0}
                 className={`px-4 py-2 rounded-md mb-3 ${
-                  stakeholderDisabled 
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                  stakeholderDisabled || stakeholderChances <= 0
+                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                     : showStakeholderHint
-                      ? 'bg-blue-700 text-blue-200'
-                      : 'bg-green-700 hover:bg-green-600 text-green-200'
+                    ? "bg-blue-700 text-blue-200"
+                    : "bg-green-700 hover:bg-green-600 text-green-200"
                 }`}
               >
-                {stakeholderDisabled ? 'Disabled' : showStakeholderHint ? 'Reading Hint...' : 'Ask for Help'}
+                {stakeholderDisabled || stakeholderChances <= 0
+                  ? "No Help Left"
+                  : showStakeholderHint
+                  ? "Reading Hint..."
+                  : `Ask stakeholder to explain about ticket (${stakeholderChances} left)`}
               </button>
-              
+
               {showStakeholderHint && (
                 <div className="bg-gray-800 border border-yellow-500 rounded p-3 text-sm w-full relative">
                   <div className="absolute top-1 right-1 text-xs text-yellow-400">
-                    {Math.floor(stakeholderReadTime / 60)}:{String(stakeholderReadTime % 60).padStart(2, '0')}
+                    {Math.floor(stakeholderReadTime / 60)}:
+                    {String(stakeholderReadTime % 60).padStart(2, "0")}
                   </div>
-                  <p className="text-yellow-300 mb-1">About: {currentTicket?.title}</p>
+                  <p className="text-yellow-300 mb-1">
+                    About: {currentTicket?.title}
+                  </p>
                   <p className="mb-2">{stakeholderMessage}</p>
-                  <button 
+                  <button
                     onClick={dismissStakeholderHint}
                     className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-1 rounded"
                   >
@@ -522,13 +696,13 @@ const ProjectSimulationGame = () => {
                   </button>
                 </div>
               )}
-              
-              {stakeholderMood > 0 && !stakeholderDisabled && (
+
+              {!stakeholderDisabled && stakeholderChances > 0 && (
                 <div className="mt-2 text-xs text-gray-400">
-                  Patience level: {5 - stakeholderMood}/5
+                  Help chances left: {stakeholderChances}/5
                 </div>
               )}
-              
+
               {stakeholderDisabled && (
                 <div className="mt-2 text-xs text-red-400">
                   Stakeholder is frustrated and won't help anymore!
@@ -538,29 +712,38 @@ const ProjectSimulationGame = () => {
           </div>
         </div>
 
-        {/* Team Members Grid - Updated with scrolling */}
+        {/* Team Members Grid */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(roles || {}).map(([category, rolesList]) => (
-            <div 
-              key={category} 
+            <div
+              key={category}
               className="bg-gray-900 border border-green-500 rounded-lg p-4 flex flex-col"
-              style={{ maxHeight: '70vh' }}
+              style={{ maxHeight: "70vh" }}
             >
               <h2 className="text-lg font-bold text-green-400 mb-3 border-b border-green-800 pb-2">
                 {category.toUpperCase()}
               </h2>
-              
+
               <div className="overflow-y-auto flex-1 pr-2">
                 <div className="space-y-4">
                   {rolesList.map((role) => {
                     const isHighlighted = highlightedRole === role.name;
-                    const isOverloaded = role.ongoingTickets.length >= role.load;
+                    const isOverloaded =
+                      role.ongoingTickets.length >= role.load;
                     const emotion = getEmotion(role);
-                    
+
                     return (
                       <div
                         key={role.name}
-                        className={`border rounded-lg p-3 transition-all ${isHighlighted ? 'border-blue-400 bg-blue-900 bg-opacity-30' : 'border-gray-700 bg-gray-800'} ${isOverloaded && isDragging ? 'border-red-400 bg-red-900 bg-opacity-30' : ''}`}
+                        className={`border rounded-lg p-3 transition ${
+                          isHighlighted
+                            ? "border-blue-400 bg-blue-900 bg-opacity-30"
+                            : "border-gray-700 bg-gray-800"
+                        } ${
+                          isOverloaded && isDragging
+                            ? "border-red-400 bg-red-900 bg-opacity-30"
+                            : ""
+                        }`}
                         onDrop={(e) => handleDrop(e, role)}
                         onDragOver={(e) => {
                           e.preventDefault();
@@ -570,39 +753,50 @@ const ProjectSimulationGame = () => {
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <h3 className="font-bold text-green-300">{role.name}</h3>
+                            <h3 className="font-bold text-green-300">
+                              {role.name}
+                            </h3>
                             <p className="text-xs text-gray-400">{role.role}</p>
                           </div>
                           <EmotionFace emotion={emotion} />
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                           <div>
-                            <span className="text-gray-500">Load:</span> {role.ongoingTickets.length}/{role.load}
+                            <span className="text-gray-500">Load:</span>{" "}
+                            {role.ongoingTickets.length}/{role.load}
                           </div>
                           <div>
-                            <span className="text-gray-500">Max Diff:</span> {role.maxDifficulty}
+                            <span className="text-gray-500">Max Diff:</span>{" "}
+                            {role.maxDifficulty}
                           </div>
                           <div>
-                            <span className="text-gray-500">Exp:</span> {role.experience}y
+                            <span className="text-gray-500">Exp:</span>{" "}
+                            {role.experience}y
                           </div>
                           <div>
-                            <span className="text-gray-500">Skills:</span> {role.skills.length}
+                            <span className="text-gray-500">Skills:</span>{" "}
+                            {role.skills.length}
                           </div>
                         </div>
-                        
+
                         <div className="text-xs">
                           <div className="text-green-500 mb-1">ONGOING:</div>
                           {role.ongoingTickets.length > 0 ? (
                             <ul className="space-y-1">
                               {role.ongoingTickets.map((ticket, idx) => (
                                 <li key={idx} className="text-gray-400">
-                                  • {ticket.title} <span className="text-gray-600">({formatTime(ticket.remainingTime)})</span>
+                                  • {ticket.title}{" "}
+                                  <span className="text-gray-600">
+                                    ({formatTime(ticket.remainingTime)})
+                                  </span>
                                 </li>
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-gray-600 italic">No active tickets</p>
+                            <p className="text-gray-600 italic">
+                              No active tickets
+                            </p>
                           )}
                         </div>
                       </div>
@@ -614,10 +808,11 @@ const ProjectSimulationGame = () => {
           ))}
         </div>
       </main>
-      
+
       {/* Terminal footer */}
       <footer className="relative z-10 bg-gray-900 border-t border-green-500 p-2 text-center text-xs text-green-700">
-        SYSTEM STATUS: {isGamePaused ? 'PAUSED' : 'OPERATIONAL'} | {new Date().toLocaleString()} | v2.4.1
+        SYSTEM STATUS: {isGamePaused ? "PAUSED" : "OPERATIONAL"} |{" "}
+        {new Date().toLocaleString()} | v2.4.1
       </footer>
     </div>
   );
