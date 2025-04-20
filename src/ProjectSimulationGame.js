@@ -123,8 +123,7 @@ const ProjectSimulationGame = () => {
 
   // Function to get stakeholder hint from backend
   const getStakeholderHint = async () => {
-    if (!currentTicket || stakeholderDisabled || stakeholderChances <= 0)
-      return;
+    if (!currentTicket || stakeholderDisabled) return;
 
     setIsCallingStakeholder(true);
 
@@ -158,7 +157,8 @@ const ProjectSimulationGame = () => {
         const newMood = 5 - newChances;
         setStakeholderMood(newMood);
 
-        if (newChances <= 0) {
+        // Only disable and show frustration message when chances reach 0 (after 5 requests)
+        if (newChances === 0) {
           setScore((prev) => prev - 50);
           setStakeholderDisabled(true);
           setStakeholderMessage("I'm done helping! Figure it out yourself!");
@@ -473,7 +473,6 @@ const ProjectSimulationGame = () => {
       />
     );
   }
-  console.log(currentTicket, roles);
 
   return (
     <div className="relative min-h-screen bg-black text-green-300 font-mono overflow-hidden">
@@ -703,7 +702,7 @@ const ProjectSimulationGame = () => {
                     onClick={dismissStakeholderHint}
                     className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-1 rounded"
                   >
-                   Back to Simulation
+                    Back to Simulation
                   </button>
                 </div>
               )}
@@ -714,7 +713,7 @@ const ProjectSimulationGame = () => {
                 </div>
               )}
 
-              {stakeholderDisabled && (
+              {stakeholderChances === 0 && (
                 <div className="mt-2 text-xs text-red-400">
                   Stakeholder is frustrated and won't help anymore!
                 </div>
@@ -787,7 +786,7 @@ const ProjectSimulationGame = () => {
                           </div>
                           <div>
                             <span className="text-gray-500">Skills:</span>{" "}
-                            {role.skills.join()}
+                            {role.skills.join(", ")}
                           </div>
                         </div>
 
