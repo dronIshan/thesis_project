@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/thesis_project/static/css/main.57316b75.css",
+    "main.js": "/thesis_project/static/js/main.774e18bb.js",
+    "index.html": "/thesis_project/index.html",
+    "main.57316b75.css.map": "/thesis_project/static/css/main.57316b75.css.map",
+    "main.774e18bb.js.map": "/thesis_project/static/js/main.774e18bb.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.57316b75.css",
+    "static/js/main.774e18bb.js"
+  ]
+}
