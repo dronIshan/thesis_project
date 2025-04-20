@@ -473,6 +473,7 @@ const ProjectSimulationGame = () => {
       />
     );
   }
+  console.log(currentTicket, roles);
 
   return (
     <div className="relative min-h-screen bg-black text-green-300 font-mono overflow-hidden">
@@ -523,7 +524,7 @@ const ProjectSimulationGame = () => {
             <div className="flex items-center">
               <label className="flex items-center cursor-pointer">
                 <span className="mr-2 text-sm text-green-400">
-                  Easy mode on — turn off to remove required roles and earn +20
+                  Easy mode on — turn off to remove required skills and earn +20
                   bonus points per ticket
                 </span>
                 <div className="relative">
@@ -623,17 +624,27 @@ const ProjectSimulationGame = () => {
                 {isPracticeMode && (
                   <div>
                     <h4 className="text-xs text-green-500 mb-1">
-                      REQUIRED ROLES:
+                      REQUIRED SKILLS:
                     </h4>
                     <div className="flex flex-wrap gap-1">
-                      {currentTicket.roles.map((role, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300"
-                        >
-                          {role}
-                        </span>
-                      ))}
+                      {currentTicket.roles
+                        .flatMap((roleName) => {
+                          // Find the role in our roles object that matches this role name
+                          const role = Object.values(roles)
+                            .flat()
+                            .find((r) => r.name === roleName);
+
+                          // If we found the role, use its skills, otherwise just use the role name
+                          return role ? role.skills : [roleName];
+                        })
+                        .map((skill, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300"
+                          >
+                            {skill}
+                          </span>
+                        ))}
                     </div>
                   </div>
                 )}
@@ -692,7 +703,7 @@ const ProjectSimulationGame = () => {
                     onClick={dismissStakeholderHint}
                     className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-1 rounded"
                   >
-                    Dismiss Early
+                   Back to Simulation
                   </button>
                 </div>
               )}
@@ -776,7 +787,7 @@ const ProjectSimulationGame = () => {
                           </div>
                           <div>
                             <span className="text-gray-500">Skills:</span>{" "}
-                            {role.skills.length}
+                            {role.skills.join()}
                           </div>
                         </div>
 
