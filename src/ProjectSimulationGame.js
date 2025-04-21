@@ -1,76 +1,40 @@
+// src/ProjectSimulationGame.js
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import CountdownTimer from "./CountdownTimer";
 import EmotionFace from "./EmotionFace";
 import PDMatchingGame from "./PDMatchingGame";
 import StatsPopup from "./StatsPopup";
 
-// Updated Phone Call Animation Component
+/* ────────────────────────────────────────────────────────── */
+/*  Phone‑call “dial” overlay                                */
+/* ────────────────────────────────────────────────────────── */
 const PhoneCallAnimation = () => (
-  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-70">
+  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70">
     <div className="text-green-400 text-xl mb-4 font-mono animate-pulse">
-      Calling stakeholder...
+      Calling stakeholder…
     </div>
     <div className="phone-dial">
       <div className="dial-circle">
-        <div className="dial-hole"></div>
+        <div className="dial-hole" />
       </div>
-      <div className="dial-line"></div>
+      <div className="dial-line" />
     </div>
   </div>
 );
 
-// Updated CSS for the animation
 const pulseAnimationStyles = `
-  .phone-dial {
-    position: relative;
-    width: 120px;
-    height: 120px;
-  }
-  
-  .dial-circle {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border: 4px solid #10b981;
-    border-radius: 50%;
-    animation: rotate 2s linear infinite;
-  }
-  
-  .dial-hole {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background-color: #10b981;
-    border-radius: 50%;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  
-  .dial-line {
-    position: absolute;
-    width: 4px;
-    height: 40px;
-    background-color: #10b981;
-    top: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  
-  @keyframes rotate {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
+.phone-dial{position:relative;width:120px;height:120px}
+.dial-circle{position:absolute;width:100%;height:100%;border:4px solid #10b981;border-radius:50%;animation:rotate 2s linear infinite}
+.dial-hole{position:absolute;width:20px;height:20px;background:#10b981;border-radius:50%;top:10px;left:50%;transform:translateX(-50%)}
+.dial-line{position:absolute;width:4px;height:40px;background:#10b981;top:30px;left:50%;transform:translateX(-50%)}
+@keyframes rotate{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 `;
 
+/* ────────────────────────────────────────────────────────── */
+/*  MAIN SIMULATION COMPONENT                                */
+/* ────────────────────────────────────────────────────────── */
 const ProjectSimulationGame = () => {
-  // ----------------------------------------------------------------------
-  // State
-  // ----------------------------------------------------------------------
+  /* ────────────── state ────────────── */
   const [roles, setRoles] = useState({});
   const [tickets, setTickets] = useState([]);
   const [companyDetails, setCompanyDetails] = useState("");
@@ -92,10 +56,10 @@ const ProjectSimulationGame = () => {
   });
   const [simulationStartTime, setSimulationStartTime] = useState(null);
   const [message, setMessage] = useState(
-    "Drag tickets to the appropriate team members"
+    "Drag tickets to team members or click 'Do Later' to skip"
   );
   const [incorrectDrop, setIncorrectDrop] = useState(false);
-  const [stakeholderMood, setStakeholderMood] = useState(0); // 0-5 scale
+  const [stakeholderMood, setStakeholderMood] = useState(0); // 0‑5
   const [stakeholderMessage, setStakeholderMessage] = useState("");
   const [stakeholderDisabled, setStakeholderDisabled] = useState(false);
   const [showStakeholderHint, setShowStakeholderHint] = useState(false);
@@ -104,248 +68,132 @@ const ProjectSimulationGame = () => {
   const [stakeholderReadTimer, setStakeholderReadTimer] = useState(null);
   const [stakeholderChances, setStakeholderChances] = useState(5);
   const [isCallingStakeholder, setIsCallingStakeholder] = useState(false);
-  const [initialTicketCount, setInitialTicketCount] = useState(0);
+  const [initialTicketCount, setInitialTicketCount] = useState(0); // progress denominator
 
   const timerRef = useRef();
   const canvasRef = useRef(null);
 
-  // Helper function to get stakeholder emotion based on mood
-  const getStakeholderEmotion = (mood) => {
-    const emotions = [
-      "happy", // 0 - Very happy
-      "happy", // 1 - Happy
-      "neutral", // 2 - Neutral
-      "angry", // 3 - Slightly angry
-      "angry", // 4 - Angry
-      "disgusted", // 5 - Very angry
+  /* ──────────── utility helpers ──────────── */
+  const getStakeholderEmotion = (m) =>
+    ["happy", "happy", "neutral", "angry", "angry", "disgusted"][
+      Math.min(m, 5)
     ];
-    return emotions[Math.min(mood, emotions.length - 1)];
+
+  const getPriorityColor = (p) =>
+    p === "High"
+      ? "bg-red-900 text-red-300"
+      : p === "Medium"
+      ? "bg-yellow-900 text-yellow-300"
+      : p === "Low"
+      ? "bg-green-900 text-green-300"
+      : "bg-gray-700 text-gray-300";
+
+  const formatTime = (s) => {
+    const d = Math.floor(s / 60);
+    const h = Math.floor((s % 60) / 2.5);
+    const m = Math.floor(((s % 60) % 2.5) * 24);
+    return `${d}d ${h}h ${m}m`;
   };
 
-  // Function to get stakeholder hint from backend
-  const getStakeholderHint = async () => {
-    if (!currentTicket || stakeholderDisabled) return;
-
-    setIsCallingStakeholder(true);
-
-    try {
-      const response = await fetch(
-        "https://ishanvimukthi.pythonanywhere.com/api/stakeholder-npc",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ticket: currentTicket,
-            company_context: companyDetails,
-          }),
-        }
-      );
-
-      const data = await response.json();
-      setIsCallingStakeholder(false);
-
-      if (data.message) {
-        setStakeholderMessage(data.message);
-        setShowStakeholderHint(true);
-
-        // Decrement chances and update mood
-        const newChances = stakeholderChances - 1;
-        setStakeholderChances(newChances);
-
-        // Update mood based on remaining chances
-        const newMood = 5 - newChances;
-        setStakeholderMood(newMood);
-
-        // Only disable and show frustration message when chances reach 0 (after 5 requests)
-        if (newChances === 0) {
-          setScore((prev) => prev - 50);
-          setStakeholderDisabled(true);
-          setStakeholderMessage("I'm done helping! Figure it out yourself!");
-        }
-      }
-    } catch (error) {
-      setIsCallingStakeholder(false);
-      console.error("Error getting stakeholder hint:", error);
-      setStakeholderMessage("Sorry, I can't help right now. Try again later.");
-    }
-  };
-
-  // Function to dismiss stakeholder hint early
-  const dismissStakeholderHint = () => {
-    clearInterval(stakeholderReadTimer);
-    setIsGamePaused(false);
-    setShowStakeholderHint(false);
-    setStakeholderReadTime(120);
-  };
-
-  // Effect for stakeholder reading timer
-  useEffect(() => {
-    if (showStakeholderHint) {
-      setIsGamePaused(true);
-      const timer = setInterval(() => {
-        setStakeholderReadTime((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setIsGamePaused(false);
-            setShowStakeholderHint(false);
-            return 120;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      setStakeholderReadTimer(timer);
-
-      return () => clearInterval(timer);
-    }
-  }, [showStakeholderHint]);
-
-  // CRT screen effect
-  useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    // Create scanlines effect
-    const drawScanlines = () => {
-      ctx.fillStyle = "rgba(0, 255, 0, 0.05)";
-      for (let y = 0; y < canvas.height; y += 2) {
-        ctx.fillRect(0, y, canvas.width, 1);
-      }
-    };
-
-    // Create flickering effect
-    const flicker = () => {
-      ctx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.1})`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    };
-
-    const animate = () => {
-      flicker();
-      drawScanlines();
-      requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => cancelAnimationFrame(animate);
-  }, []);
-
-  const handlePdGameComplete = (data) => {
-    const { pdStats, simulationData } = data;
+  /* ──────────── PD‑matching complete ──────────── */
+  const handlePdGameComplete = ({ pdStats, simulationData }) => {
     setPdStats(pdStats || { timeTaken: 0, falseMatches: 0, correctMatches: 0 });
     setRoles(simulationData.roles || {});
     setTickets(simulationData.tickets || []);
     setCompanyDetails(simulationData.companyDetails || "");
     setIsPdChallengeComplete(true);
     setSimulationStartTime(Date.now());
-    // Reset stakeholder chances when new game starts
+
+    /* reset stakeholder state */
     setStakeholderChances(5);
     setStakeholderMood(0);
     setStakeholderDisabled(false);
 
-    // Calculate initial ticket count based on all tickets in all roles
-    const initialCount = Object.values(simulationData.roles || {}).reduce(
-      (total, roleList) =>
-        total +
-        roleList.reduce(
-          (roleTotal, role) => roleTotal + role.ongoingTickets.length,
-          0
-        ),
-      0
-    );
-    setInitialTicketCount(initialCount);
+    /* ── PROGRESS BAR FIX ──
+       use total ticket pool as denominator                       */
+    setInitialTicketCount(simulationData.tickets.length);
   };
 
+  /* ─────────── generate a draggable ticket ─────────── */
   const generateNewTicket = useCallback(() => {
-    if (!tickets || tickets.length === 0) return;
-    const newTicket = tickets[Math.floor(Math.random() * tickets.length)];
-    newTicket.id = Math.random().toString(36).substr(2, 9);
-    newTicket.remainingTime = newTicket.time;
-    newTicket.startTime = Date.now();
-    setCurrentTicket(newTicket);
+    if (!tickets.length) return;
+    const t = { ...tickets[Math.floor(Math.random() * tickets.length)] };
+    t.id = Math.random().toString(36).slice(2, 11);
+    t.remainingTime = t.time;
+    t.startTime = Date.now();
+    setCurrentTicket(t);
     setShowStakeholderHint(false);
   }, [tickets]);
 
+  /* spawn first ticket after PD phase */
   useEffect(() => {
-    if (isPdChallengeComplete && !currentTicket && tickets.length > 0) {
+    if (isPdChallengeComplete && !currentTicket && tickets.length)
       generateNewTicket();
-    }
-  }, [currentTicket, tickets, generateNewTicket, isPdChallengeComplete]);
+  }, [isPdChallengeComplete, currentTicket, tickets, generateNewTicket]);
 
+  /* ─────────── main simulation loop ─────────── */
   useEffect(() => {
     if (!isPdChallengeComplete || isGamePaused) return;
-    timerRef.current = setInterval(() => {
-      if (!roles || Object.keys(roles).length === 0) return;
 
-      // Process ongoing tickets and move completed ones
+    timerRef.current = setInterval(() => {
+      if (!Object.keys(roles).length) return;
+
+      /* advance timers + move to completed */
       Object.values(roles).forEach((roleList) => {
         roleList.forEach((role) => {
-          const completedTickets = [];
+          const finished = [];
           role.ongoingTickets = role.ongoingTickets
-            .map((ticket) => {
-              if (ticket.remainingTime > 1) {
-                return { ...ticket, remainingTime: ticket.remainingTime - 1 };
-              } else {
-                completedTickets.push(ticket);
-                return null;
-              }
+            .map((t) => {
+              if (t.remainingTime > 1)
+                return { ...t, remainingTime: t.remainingTime - 1 };
+              finished.push(t);
+              return null;
             })
-            .filter((ticket) => ticket !== null);
-          role.completedTickets.push(...completedTickets);
+            .filter(Boolean);
+          role.completedTickets.push(...finished);
         });
       });
 
-      // Calculate progress based only on initial ticket count and completed tickets
-      const completedTicketsCount = Object.values(roles).reduce(
-        (total, roleList) =>
-          total +
-          roleList.reduce(
-            (roleTotal, role) => roleTotal + role.completedTickets.length,
-            0
-          ),
+      /* progress bar */
+      const completed = Object.values(roles).reduce(
+        (tot, roleList) =>
+          tot +
+          roleList.reduce((rTot, r) => rTot + r.completedTickets.length, 0),
         0
       );
-
-      const progressPercentage =
-        initialTicketCount === 0
-          ? 0
-          : (completedTicketsCount / initialTicketCount) * 100;
-
-      setProgress(progressPercentage);
-
-      if (progressPercentage >= 100) {
+      const pct = initialTicketCount
+        ? (completed / initialTicketCount) * 100
+        : 0;
+      setProgress(pct);
+      if (pct >= 100) {
         setIsGameComplete(true);
         clearInterval(timerRef.current);
       }
 
+      /* timeout on current ticket */
       if (currentTicket && currentTicket.remainingTime <= 0) {
-        setScore((prev) => prev - 5);
-        const decisionTime = Date.now() - currentTicket.startTime;
-        setDecisionTimes((prev) => [...prev, decisionTime]);
+        setScore((p) => p - 1);
+        setDecisionTimes((p) => [...p, Date.now() - currentTicket.startTime]);
         generateNewTicket();
       }
     }, 1000);
+
     return () => clearInterval(timerRef.current);
   }, [
     roles,
     currentTicket,
-    generateNewTicket,
     isPdChallengeComplete,
     isGamePaused,
     initialTicketCount,
+    generateNewTicket,
   ]);
 
-  const handleDragStart = (e, ticket) => {
-    e.dataTransfer.setData("text/plain", JSON.stringify(ticket));
+  /* ─────────── drag‑and‑drop handlers ─────────── */
+  const handleDragStart = (e, t) => {
+    e.dataTransfer.setData("text/plain", JSON.stringify(t));
     setIsDragging(true);
-    setMessage(`Assigning: ${ticket.title}`);
+    setMessage(`Assigning: ${t.title}`);
   };
-
   const handleDragEnd = () => {
     setIsDragging(false);
     setHighlightedRole(null);
@@ -354,67 +202,49 @@ const ProjectSimulationGame = () => {
   const handleDrop = (e, role) => {
     e.preventDefault();
     const ticket = JSON.parse(e.dataTransfer.getData("text"));
-    const decisionTime = Date.now() - ticket.startTime;
-    setDecisionTimes((prev) => [...prev, decisionTime]);
+    const dt = Date.now() - ticket.startTime;
+    setDecisionTimes((p) => [...p, dt]);
 
-    // extra 20 points if easy mode is OFF
-    const extraPoints = !isPracticeMode ? 20 : 0;
-
-    let isCorrectAssignment = false;
+    const extra = !isPracticeMode ? 20 : 0;
+    let correct = false;
 
     if (
       ticket.roles.includes(role.name) &&
-      role.ongoingTickets.length < role.load &&
-      ticket.difficulty <= role.maxDifficulty
+      role.ongoingTickets.length < role.load
     ) {
-      // perfect assignment
-      role.ongoingTickets.push(ticket);
-      setScore((prev) => prev + 10 + extraPoints);
-      setCorrectAssignments((prev) => prev + 1);
-      setMessage("✅ Perfect assignment! Generating new ticket...");
-      setTimeout(
-        () => setMessage("Drag tickets to the appropriate team members"),
-        2000
-      );
+      if (ticket.difficulty <= role.maxDifficulty) {
+        // perfect
+        role.ongoingTickets.push(ticket);
+        setScore((p) => p + 10 + extra);
+        setMessage("✅ Perfect assignment! Generating new ticket…");
+      } else {
+        // challenging
+        ticket.time *= 1.5;
+        ticket.remainingTime = ticket.time;
+        role.ongoingTickets.push(ticket);
+        setScore((p) => p + 5 + extra);
+        setMessage("⚠️ Challenging assignment ‑ time increased!");
+      }
+      setCorrectAssignments((p) => p + 1);
+      correct = true;
       generateNewTicket();
-      isCorrectAssignment = true;
-    } else if (
-      ticket.roles.includes(role.name) &&
-      role.ongoingTickets.length < role.load &&
-      ticket.difficulty > role.maxDifficulty
-    ) {
-      // challenging assignment
-      ticket.time *= 1.5;
-      ticket.remainingTime = ticket.time;
-      role.ongoingTickets.push(ticket);
-      setScore((prev) => prev + 5 + extraPoints);
-      setCorrectAssignments((prev) => prev + 1);
-      setMessage("⚠️ Challenging assignment - time increased!");
-      setTimeout(
-        () => setMessage("Drag tickets to the appropriate team members"),
-        2000
-      );
-      generateNewTicket();
-      isCorrectAssignment = true;
     } else {
-      // incorrect assignment
-      setScore((prev) => prev - 5);
-      setFalseSelections((prev) => prev + 1);
+      setScore((p) => p - 1);
+      setFalseSelections((p) => p + 1);
       setMessage("❌ Incorrect assignment! Try again.");
       setIncorrectDrop(true);
       setTimeout(() => {
         setIncorrectDrop(false);
-        setMessage("Drag tickets to the appropriate team members");
+        setMessage("Drag tickets to team members or click 'Do Later' to skip");
       }, 2000);
     }
 
-    // Update stakeholder mood for incorrect assignments
-    if (!isCorrectAssignment) {
-      const newMood = Math.min(stakeholderMood + 1, 5);
-      setStakeholderMood(newMood);
-
-      if (newMood >= 5) {
-        setScore((prev) => prev - 50);
+    /* stakeholder mood */
+    if (!correct) {
+      const m = Math.min(stakeholderMood + 1, 5);
+      setStakeholderMood(m);
+      if (m >= 5) {
+        setScore((p) => p - 5);
         setStakeholderDisabled(true);
         setStakeholderMessage("Too many mistakes! I'm not helping anymore!");
       }
@@ -424,45 +254,85 @@ const ProjectSimulationGame = () => {
     setHighlightedRole(null);
   };
 
-  const formatTime = (seconds) => {
-    const days = Math.floor(seconds / 60);
-    const hours = Math.floor((seconds % 60) / 2.5);
-    const minutes = Math.floor(((seconds % 60) % 2.5) * 24);
-    return `${days}d ${hours}h ${minutes}m`;
+  /* ─────────── stake‑holder hint ─────────── */
+  const getStakeholderHint = async () => {
+    if (!currentTicket || stakeholderDisabled) return;
+    setIsCallingStakeholder(true);
+    try {
+      const res = await fetch(
+        "https://ishanvimukthi.pythonanywhere.com/api/stakeholder-npc",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ticket: currentTicket,
+            company_context: companyDetails,
+          }),
+        }
+      );
+      const data = await res.json();
+      setIsCallingStakeholder(false);
+
+      if (data.message) {
+        setStakeholderMessage(data.message);
+        setShowStakeholderHint(true);
+        const nc = stakeholderChances - 1;
+        setStakeholderChances(nc);
+        setStakeholderMood(5 - nc);
+        if (nc === 0) {
+          setScore((p) => p - 5);
+          setStakeholderDisabled(true);
+          setStakeholderMessage("I'm done helping! Figure it out yourself!");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setIsCallingStakeholder(false);
+      setStakeholderMessage("Sorry, I can't help right now.");
+    }
   };
 
+  /* hint read‑timer */
+  useEffect(() => {
+    if (showStakeholderHint) {
+      setIsGamePaused(true);
+      const t = setInterval(() => {
+        setStakeholderReadTime((p) =>
+          p <= 1
+            ? (clearInterval(t),
+              setIsGamePaused(false),
+              setShowStakeholderHint(false),
+              120)
+            : p - 1
+        );
+      }, 1000);
+      setStakeholderReadTimer(t);
+      return () => clearInterval(t);
+    }
+  }, [showStakeholderHint]);
+
+  const dismissStakeholderHint = () => {
+    clearInterval(stakeholderReadTimer);
+    setShowStakeholderHint(false);
+    setStakeholderReadTime(120);
+    setIsGamePaused(false);
+  };
+
+  /* ─────────── time‑up on countdown widget ─────────── */
   const handleTimeUp = () => {
-    setScore((prev) => prev - 5);
-    const dt = Date.now() - currentTicket.startTime;
-    setDecisionTimes((prev) => [...prev, dt]);
-    setMessage("⌛ Time expired! Generating new ticket...");
-    setTimeout(
-      () => setMessage("Drag tickets to the appropriate team members"),
-      2000
-    );
+    setScore((p) => p - 1);
+    setDecisionTimes((p) => [...p, Date.now() - currentTicket.startTime]);
+    setMessage("⌛ Time expired! Generating new ticket…");
     generateNewTicket();
   };
 
+  /* ─────────── misc helpers ─────────── */
   const getEmotion = (role) => {
-    const ticketCount = role.ongoingTickets.length;
-    if (ticketCount === 0) return "happy";
-    if (ticketCount < role.load) return "neutral";
-    if (ticketCount === role.load) return "angry";
-    if (ticketCount > role.load) return "sad";
-    return "neutral";
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "High":
-        return "bg-red-900 text-red-300";
-      case "Medium":
-        return "bg-yellow-900 text-yellow-300";
-      case "Low":
-        return "bg-green-900 text-green-300";
-      default:
-        return "bg-gray-700 text-gray-300";
-    }
+    const c = role.ongoingTickets.length;
+    if (c === 0) return "happy";
+    if (c < role.load) return "neutral";
+    if (c === role.load) return "angry";
+    return "sad";
   };
 
   const endGameEarly = () => {
@@ -470,12 +340,13 @@ const ProjectSimulationGame = () => {
     clearInterval(timerRef.current);
   };
 
-  if (!isPdChallengeComplete) {
+  /* ─────────── early‑phase routing ─────────── */
+  if (!isPdChallengeComplete)
     return <PDMatchingGame onComplete={handlePdGameComplete} />;
-  }
 
+  /* ─────────── simulation finished ─────────── */
   if (isGameComplete) {
-    const simulationTime = simulationStartTime
+    const simTime = simulationStartTime
       ? ((Date.now() - simulationStartTime) / 1000).toFixed(2)
       : "0";
     return (
@@ -485,27 +356,27 @@ const ProjectSimulationGame = () => {
         falseSelections={falseSelections}
         decisionTimes={decisionTimes}
         pdStats={pdStats}
-        simulationTime={simulationTime}
+        simulationTime={simTime}
         onRestart={() => window.location.reload()}
       />
     );
   }
 
+  /* ─────────── RENDER MAIN UI ─────────── */
   return (
-    <div className="relative min-h-screen bg-black text-green-300 font-mono overflow-hidden">
-      {/* Add the pulse animation styles */}
+    <div className="relative min-h-screen bg-black font-mono text-green-300 overflow-hidden">
+      {/* dial animation styles */}
       <style>{pulseAnimationStyles}</style>
 
-      {/* Show phone call animation when calling stakeholder */}
       {isCallingStakeholder && <PhoneCallAnimation />}
 
-      {/* CRT overlay effect */}
+      {/* CRT overlay */}
       <canvas
         ref={canvasRef}
-        className="fixed top-0 left-0 w-full h-full pointer-events-none opacity-30 z-0"
+        className="fixed inset-0 w-full h-full pointer-events-none opacity-30 z-0"
       />
 
-      {/* Header */}
+      {/* HEADER */}
       <header className="relative z-10 bg-gray-900 border-b border-green-500 p-4">
         <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
@@ -517,26 +388,20 @@ const ProjectSimulationGame = () => {
             </p>
           </div>
 
+          {/* SCORE BOXES + practice toggle */}
           <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-            <div className="text-center">
-              <div className="text-green-400 text-2xl font-bold">{score}</div>
-              <div className="text-xs text-green-600">SCORE</div>
-            </div>
-
-            <div className="text-center">
-              <div className="text-blue-400 text-2xl font-bold">
-                {correctAssignments}
+            {[
+              ["SCORE", score, "green"],
+              ["CORRECT", correctAssignments, "blue"],
+              ["ERRORS", falseSelections, "red"],
+            ].map(([lbl, val, c]) => (
+              <div key={lbl} className="text-center">
+                <div className={`text-${c}-400 text-2xl font-bold`}>{val}</div>
+                <div className={`text-xs text-${c}-600`}>{lbl}</div>
               </div>
-              <div className="text-xs text-blue-600">CORRECT</div>
-            </div>
+            ))}
 
-            <div className="text-center">
-              <div className="text-red-400 text-2xl font-bold">
-                {falseSelections}
-              </div>
-              <div className="text-xs text-red-600">ERRORS</div>
-            </div>
-
+            {/* practice mode switch */}
             <div className="flex items-center">
               <label className="flex items-center cursor-pointer">
                 <span className="mr-2 text-sm text-green-400">
@@ -554,27 +419,27 @@ const ProjectSimulationGame = () => {
                     className={`w-10 h-4 rounded-full shadow-inner ${
                       isPracticeMode ? "bg-green-500" : "bg-gray-700"
                     }`}
-                  ></div>
+                  />
                   <div
                     className={`absolute w-6 h-6 rounded-full shadow -left-1 -top-1 transition ${
                       isPracticeMode
-                        ? "bg-green-400 transform translate-x-5"
+                        ? "bg-green-400 translate-x-5"
                         : "bg-gray-500"
                     }`}
-                  ></div>
+                  />
                 </div>
               </label>
             </div>
           </div>
         </div>
 
-        {/* Progress bar and controls */}
+        {/* progress bar + end‑sim button */}
         <div className="flex items-center gap-4 mt-4">
           <div className="flex-1 bg-gray-800 rounded-full h-2">
             <div
               className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
-            ></div>
+            />
           </div>
           <button
             onClick={endGameEarly}
@@ -584,32 +449,32 @@ const ProjectSimulationGame = () => {
           </button>
         </div>
 
-        {/* Message display */}
+        {/* system message */}
         <div
-          className={`mt-3 p-2 text-center rounded border ${
+          className={`mt-3 p-2 text-center rounded border transition-all ${
             incorrectDrop
               ? "border-red-500 bg-red-900 bg-opacity-30"
               : "border-green-500 bg-green-900 bg-opacity-30"
-          } transition-all`}
+          }`}
         >
           <p className="text-sm font-medium">{message}</p>
         </div>
       </header>
 
+      {/* MAIN GRID */}
       <main className="relative z-10 container mx-auto p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left sidebar with Current Ticket and Stakeholder */}
+        {/* LEFT SIDEBAR */}
         <div className="lg:col-span-1 space-y-4">
-          {/* Current Ticket Panel */}
+          {/* current ticket panel */}
           <div className="bg-gray-900 border border-green-500 rounded-lg p-4 shadow-lg">
             <h2 className="text-lg font-bold text-green-400 mb-4 border-b border-green-800 pb-2">
               CURRENT TICKET
             </h2>
-
             {currentTicket ? (
               <div
                 className={`bg-gray-800 border ${
                   isDragging ? "border-blue-400" : "border-green-700"
-                } rounded p-4 transition-all duration-200`}
+                } rounded p-4 transition-all`}
                 draggable
                 onDragStart={(e) => handleDragStart(e, currentTicket)}
                 onDragEnd={handleDragEnd}
@@ -620,7 +485,6 @@ const ProjectSimulationGame = () => {
                 <p className="text-sm text-gray-400 mb-3">
                   {currentTicket.description}
                 </p>
-
                 <div className="flex flex-wrap gap-2 mb-3">
                   <span
                     className={`px-2 py-1 rounded text-xs ${getPriorityColor(
@@ -636,7 +500,6 @@ const ProjectSimulationGame = () => {
                     {(currentTicket.time / 60).toFixed(1)} days
                   </span>
                 </div>
-
                 <div className="mb-3">
                   <CountdownTimer
                     minutes={currentTicket.time / 60}
@@ -644,7 +507,6 @@ const ProjectSimulationGame = () => {
                     isPaused={isGamePaused}
                   />
                 </div>
-
                 {isPracticeMode && (
                   <div>
                     <h4 className="text-xs text-green-500 mb-1">
@@ -652,26 +514,40 @@ const ProjectSimulationGame = () => {
                     </h4>
                     <div className="flex flex-wrap gap-1">
                       {currentTicket.roles
-                        .flatMap((roleName) => {
-                          // Find the role in our roles object that matches this role name
-                          const role = Object.values(roles)
+                        .flatMap((rn) => {
+                          const r = Object.values(roles)
                             .flat()
-                            .find((r) => r.name === roleName);
-
-                          // If we found the role, use its skills, otherwise just use the role name
-                          return role ? role.skills : [roleName];
+                            .find((x) => x.name === rn);
+                          return r ? r.skills : [rn];
                         })
-                        .map((skill, i) => (
+                        .map((s, i) => (
                           <span
                             key={i}
                             className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300"
                           >
-                            {skill}
+                            {s}
                           </span>
                         ))}
                     </div>
                   </div>
                 )}
+                {/* Do Later button */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => {
+                      setScore((p) => p - 2); // Small penalty for skipping
+                      setDecisionTimes((p) => [
+                        ...p,
+                        Date.now() - currentTicket.startTime,
+                      ]);
+                      setMessage("Ticket deferred - generating new one...");
+                      generateNewTicket();
+                    }}
+                    className="w-full px-3 py-2 bg-yellow-700 hover:bg-yellow-600 text-yellow-200 rounded text-sm"
+                  >
+                    Do Later (-2 pts)
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="bg-gray-800 border border-dashed border-gray-600 rounded p-8 text-center text-gray-500">
@@ -680,21 +556,15 @@ const ProjectSimulationGame = () => {
             )}
           </div>
 
-          {/* Stakeholder Panel */}
+          {/* stakeholder panel */}
           <div className="bg-gray-900 border border-green-500 rounded-lg p-4 shadow-lg">
             <h2 className="text-lg font-bold text-green-400 mb-3 border-b border-green-800 pb-2">
               {companyDetails ? `${companyDetails} STAKEHOLDER` : "STAKEHOLDER"}
             </h2>
-
             <div className="flex flex-col items-center">
-              <div className="mb-3">
-                <div className="w-32 h-32 mx-auto">
-                  <EmotionFace
-                    emotion={getStakeholderEmotion(stakeholderMood)}
-                  />
-                </div>
+              <div className="mb-3 w-32 h-32">
+                <EmotionFace emotion={getStakeholderEmotion(stakeholderMood)} />
               </div>
-
               <button
                 onClick={getStakeholderHint}
                 disabled={stakeholderDisabled || stakeholderChances <= 0}
@@ -709,10 +579,9 @@ const ProjectSimulationGame = () => {
                 {stakeholderDisabled || stakeholderChances <= 0
                   ? "No Help Left"
                   : showStakeholderHint
-                  ? "Reading Hint..."
+                  ? "Reading Hint…"
                   : `Ask stakeholder to explain about ticket (${stakeholderChances} left)`}
               </button>
-
               {showStakeholderHint && (
                 <div className="bg-gray-800 border border-yellow-500 rounded p-3 text-sm w-full relative">
                   <div className="absolute top-1 right-1 text-xs text-yellow-400">
@@ -731,13 +600,11 @@ const ProjectSimulationGame = () => {
                   </button>
                 </div>
               )}
-
               {!stakeholderDisabled && stakeholderChances > 0 && (
                 <div className="mt-2 text-xs text-gray-400">
                   Help chances left: {stakeholderChances}/5
                 </div>
               )}
-
               {stakeholderChances === 0 && (
                 <div className="mt-2 text-xs text-red-400">
                   Stakeholder is frustrated and won't help anymore!
@@ -747,104 +614,100 @@ const ProjectSimulationGame = () => {
           </div>
         </div>
 
-        {/* Team Members Grid */}
+        {/* TEAM GRID */}
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.entries(roles || {}).map(([category, rolesList]) => (
+          {Object.entries(roles).map(([cat, roleList]) => (
             <div
-              key={category}
+              key={cat}
               className="bg-gray-900 border border-green-500 rounded-lg p-4 flex flex-col"
               style={{ maxHeight: "70vh" }}
             >
               <h2 className="text-lg font-bold text-green-400 mb-3 border-b border-green-800 pb-2">
-                {category.toUpperCase()}
+                {cat.toUpperCase()}
               </h2>
+              <div className="overflow-y-auto flex-1 pr-2 space-y-4">
+                {roleList.map((role) => {
+                  const isHighlighted = highlightedRole === role.name;
+                  const isOverloaded = role.ongoingTickets.length >= role.load;
+                  const emotion = getEmotion(role);
 
-              <div className="overflow-y-auto flex-1 pr-2">
-                <div className="space-y-4">
-                  {rolesList.map((role) => {
-                    const isHighlighted = highlightedRole === role.name;
-                    const isOverloaded =
-                      role.ongoingTickets.length >= role.load;
-                    const emotion = getEmotion(role);
-
-                    return (
-                      <div
-                        key={role.name}
-                        className={`border rounded-lg p-3 transition ${
-                          isHighlighted
-                            ? "border-blue-400 bg-blue-900 bg-opacity-30"
-                            : "border-gray-700 bg-gray-800"
-                        } ${
-                          isOverloaded && isDragging
-                            ? "border-red-400 bg-red-900 bg-opacity-30"
-                            : ""
-                        }`}
-                        onDrop={(e) => handleDrop(e, role)}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          setHighlightedRole(role.name);
-                        }}
-                        onDragLeave={() => setHighlightedRole(null)}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-bold text-green-300">
-                              {role.name}
-                            </h3>
-                            <p className="text-xs text-gray-400">{role.role}</p>
-                          </div>
-                          <EmotionFace emotion={emotion} />
+                  return (
+                    <div
+                      key={role.name}
+                      onDrop={(e) => handleDrop(e, role)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setHighlightedRole(role.name);
+                      }}
+                      onDragLeave={() => setHighlightedRole(null)}
+                      className={`border rounded-lg p-3 transition ${
+                        isHighlighted
+                          ? "border-blue-400 bg-blue-900/30"
+                          : "border-gray-700 bg-gray-800"
+                      } ${
+                        isOverloaded && isDragging
+                          ? "border-red-400 bg-red-900/30"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-bold text-green-300">
+                            {role.name}
+                          </h3>
+                          <p className="text-xs text-gray-400">{role.role}</p>
                         </div>
+                        <EmotionFace emotion={emotion} />
+                      </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                          <div>
-                            <span className="text-gray-500">Load:</span>{" "}
-                            {role.ongoingTickets.length}/{role.load}
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Max Diff:</span>{" "}
-                            {role.maxDifficulty}
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Exp:</span>{" "}
-                            {role.experience}y
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Skills:</span>{" "}
-                            {role.skills.join(", ")}
-                          </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                        <div>
+                          <span className="text-gray-500">Load:</span>{" "}
+                          {role.ongoingTickets.length}/{role.load}
                         </div>
-
-                        <div className="text-xs">
-                          <div className="text-green-500 mb-1">ONGOING:</div>
-                          {role.ongoingTickets.length > 0 ? (
-                            <ul className="space-y-1">
-                              {role.ongoingTickets.map((ticket, idx) => (
-                                <li key={idx} className="text-gray-400">
-                                  • {ticket.title}{" "}
-                                  <span className="text-gray-600">
-                                    ({formatTime(ticket.remainingTime)})
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-gray-600 italic">
-                              No active tickets
-                            </p>
-                          )}
+                        <div>
+                          <span className="text-gray-500">Max Diff:</span>{" "}
+                          {role.maxDifficulty}
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Exp:</span>{" "}
+                          {role.experience}y
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Skills:</span>{" "}
+                          {role.skills.join(", ")}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      <div className="text-xs">
+                        <div className="text-green-500 mb-1">ONGOING:</div>
+                        {role.ongoingTickets.length ? (
+                          <ul className="space-y-1">
+                            {role.ongoingTickets.map((t, i) => (
+                              <li key={i} className="text-gray-400">
+                                • {t.title}{" "}
+                                <span className="text-gray-600">
+                                  ({formatTime(t.remainingTime)})
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-600 italic">
+                            No active tickets
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}
         </div>
       </main>
 
-      {/* Terminal footer */}
+      {/* FOOTER */}
       <footer className="relative z-10 bg-gray-900 border-t border-green-500 p-2 text-center text-xs text-green-700">
         SYSTEM STATUS: {isGamePaused ? "PAUSED" : "OPERATIONAL"} |{" "}
         {new Date().toLocaleString()} | v2.4.1
