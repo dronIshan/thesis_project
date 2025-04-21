@@ -265,14 +265,14 @@ const PDMatchingGame = ({ onComplete }) => {
           <StatBox label="Elapsed" value={fmt(timeElapsed)} color="green" />
         </div>
 
-        {/* ---- TEMP TEST BUTTON ---- 
+        {/* ---- TEMP TEST BUTTON ----
         <button
           onClick={handleAutoMatch}
           className="px-4 py-2 mb-3 rounded bg-purple-700 hover:bg-purple-600 text-white text-sm"
         >
           Auto‑Match (TEST)
         </button>
-        */}
+         */}
         <div className="p-4 bg-yellow-900 bg-opacity-30 border-yellow-700 border rounded-lg">
           <p className="text-yellow-300">{message}</p>
         </div>

@@ -453,6 +453,11 @@ const ProjectSimulationGame = () => {
     }
   };
 
+  const endGameEarly = () => {
+    setIsGameComplete(true);
+    clearInterval(timerRef.current);
+  };
+
   if (!isPdChallengeComplete) {
     return <PDMatchingGame onComplete={handlePdGameComplete} />;
   }
@@ -551,12 +556,20 @@ const ProjectSimulationGame = () => {
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-4 w-full bg-gray-800 rounded-full h-2">
-          <div
-            className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          ></div>
+        {/* Progress bar and controls */}
+        <div className="flex items-center gap-4 mt-4">
+          <div className="flex-1 bg-gray-800 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <button
+            onClick={endGameEarly}
+            className="px-3 py-1 bg-red-700 hover:bg-red-600 text-red-100 rounded text-sm"
+          >
+            End Simulation Early
+          </button>
         </div>
 
         {/* Message display */}
