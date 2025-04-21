@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/thesis_project/static/css/main.57316b75.css",
-    "main.js": "/thesis_project/static/js/main.7c0688ba.js",
+    "main.css": "/thesis_project/static/css/main.73cc10d3.css",
+    "main.js": "/thesis_project/static/js/main.ba2e98b8.js",
     "index.html": "/thesis_project/index.html",
-    "main.57316b75.css.map": "/thesis_project/static/css/main.57316b75.css.map",
-    "main.7c0688ba.js.map": "/thesis_project/static/js/main.7c0688ba.js.map"
+    "main.73cc10d3.css.map": "/thesis_project/static/css/main.73cc10d3.css.map",
+    "main.ba2e98b8.js.map": "/thesis_project/static/js/main.ba2e98b8.js.map"
   },
   "entrypoints": [
-    "static/css/main.57316b75.css",
-    "static/js/main.7c0688ba.js"
+    "static/css/main.73cc10d3.css",
+    "static/js/main.ba2e98b8.js"
   ]
 }
