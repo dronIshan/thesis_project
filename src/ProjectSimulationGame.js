@@ -104,6 +104,7 @@ const ProjectSimulationGame = () => {
   const [stakeholderReadTimer, setStakeholderReadTimer] = useState(null);
   const [stakeholderChances, setStakeholderChances] = useState(5);
   const [isCallingStakeholder, setIsCallingStakeholder] = useState(false);
+  const [initialTicketCount, setInitialTicketCount] = useState(0);
 
   const timerRef = useRef();
   const canvasRef = useRef(null);
@@ -246,6 +247,18 @@ const ProjectSimulationGame = () => {
     setStakeholderChances(5);
     setStakeholderMood(0);
     setStakeholderDisabled(false);
+
+    // Calculate initial ticket count based on all tickets in all roles
+    const initialCount = Object.values(simulationData.roles || {}).reduce(
+      (total, roleList) =>
+        total +
+        roleList.reduce(
+          (roleTotal, role) => roleTotal + role.ongoingTickets.length,
+          0
+        ),
+      0
+    );
+    setInitialTicketCount(initialCount);
   };
 
   const generateNewTicket = useCallback(() => {
@@ -268,6 +281,8 @@ const ProjectSimulationGame = () => {
     if (!isPdChallengeComplete || isGamePaused) return;
     timerRef.current = setInterval(() => {
       if (!roles || Object.keys(roles).length === 0) return;
+
+      // Process ongoing tickets and move completed ones
       Object.values(roles).forEach((roleList) => {
         roleList.forEach((role) => {
           const completedTickets = [];
@@ -284,18 +299,8 @@ const ProjectSimulationGame = () => {
           role.completedTickets.push(...completedTickets);
         });
       });
-      const totalTickets = Object.values(roles).reduce(
-        (total, roleList) =>
-          total +
-          roleList.reduce(
-            (roleTotal, role) =>
-              roleTotal +
-              role.completedTickets.length +
-              role.ongoingTickets.length,
-            0
-          ),
-        0
-      );
+
+      // Calculate progress based only on initial ticket count and completed tickets
       const completedTicketsCount = Object.values(roles).reduce(
         (total, roleList) =>
           total +
@@ -305,13 +310,19 @@ const ProjectSimulationGame = () => {
           ),
         0
       );
+
       const progressPercentage =
-        totalTickets === 0 ? 0 : (completedTicketsCount / totalTickets) * 100;
+        initialTicketCount === 0
+          ? 0
+          : (completedTicketsCount / initialTicketCount) * 100;
+
       setProgress(progressPercentage);
+
       if (progressPercentage >= 100) {
         setIsGameComplete(true);
         clearInterval(timerRef.current);
       }
+
       if (currentTicket && currentTicket.remainingTime <= 0) {
         setScore((prev) => prev - 5);
         const decisionTime = Date.now() - currentTicket.startTime;
@@ -326,6 +337,7 @@ const ProjectSimulationGame = () => {
     generateNewTicket,
     isPdChallengeComplete,
     isGamePaused,
+    initialTicketCount,
   ]);
 
   const handleDragStart = (e, ticket) => {
