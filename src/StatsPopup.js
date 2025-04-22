@@ -37,6 +37,14 @@ const StatsPopup = ({
     engagement: "",
     realism: "",
     comments: "",
+    // Post-quiz responses
+    quiz1: "",
+    quiz2: "",
+    quiz3: "",
+    quiz4: "",
+    quiz5: "",
+    reConfidence: "",
+    pdConfidence: "",
   });
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState("");
@@ -53,7 +61,7 @@ const StatsPopup = ({
     setIsSending(true);
 
     const payload = {
-      formData: formData, // ✅   matches server expectation
+      formData: formData, // includes post-quiz responses
       gameStats: {
         score,
         correctAssignments,
@@ -80,27 +88,47 @@ const StatsPopup = ({
     } catch (err) {
       console.error(err);
       setSendError("❌ Could not upload data, please try again.");
-      /*  ► If you want to proceed even on error, uncomment: */
+      /*  ► If you want to proceed even on error, uncomment: */
       // setFormSubmitted(true);
     } finally {
       setIsSending(false);
     }
   };
 
-  /* ── pick lists ──────────────────────────────────────────────── */
-  const industries = [
-    "Software Engineering",
-    "Product Management",
-    "UX/UI Design",
-    "Systems Engineering",
-    "Game Development",
-    "Healthcare IT",
-    "Financial Technology",
-    "Automotive",
-    "Aerospace & Defense",
-    "Telecommunications",
-    "Other",
-  ];
+  /* ── quiz options ────────────────────────────────────────────── */
+  const quizOptions = {
+    quiz1: [
+      "Writing backend code",
+      "Managing cloud infrastructure",
+      "Translating user needs into product features",
+      "Testing software",
+    ],
+    quiz2: [
+      "Minimize dev costs by cutting requirements",
+      "Identify, analyze & validate stakeholder needs",
+      "Create ready‑to‑code specs",
+      "Eliminate need for testing",
+    ],
+    quiz3: [
+      "Guess at their intent",
+      "Document your assumptions & later validate",
+      "Restart the project",
+      "Ignore the issue",
+    ],
+    quiz4: [
+      "Refactoring backend code",
+      "Removing unnecessary requirements",
+      "Splitting complex features into smaller tasks",
+      "Writing design docs",
+    ],
+    quiz5: [
+      "Stakeholders never get frustrated",
+      "Importance of efficient, thoughtful questions",
+      "You can ask unlimited hints",
+      "Always escalate to management",
+    ],
+    confidence: ["1", "2", "3", "4", "5"],
+  };
 
   /* ── render ──────────────────────────────────────────────────── */
   return (
@@ -109,7 +137,7 @@ const StatsPopup = ({
         {/* header */}
         <header className="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
           <h2 className="text-3xl font-bold text-white flex items-center">
-            <span className="text-4xl mr-2">🎉</span> Game Complete!
+            <span className="text-4xl mr-2">🎉</span> Game Complete!
           </h2>
           <p className="text-blue-100">
             Thanks for participating in our research study!
@@ -117,7 +145,7 @@ const StatsPopup = ({
         </header>
 
         {!formSubmitted ? (
-          /* ────────────── SURVEY FORM ────────────── */
+          /* ────────────── SURVEY & POST QUIZ FORM ────────────── */
           <div className="p-6 overflow-y-auto max-h-[80vh]">
             <h3 className="text-xl font-medium text-gray-800 dark:text-white mb-6">
               Research Participant Information
@@ -205,7 +233,19 @@ const StatsPopup = ({
                   value={formData.industry}
                   onChange={handleChange}
                   required
-                  options={industries}
+                  options={[
+                    "Software Engineering",
+                    "Product Management",
+                    "UX/UI Design",
+                    "Systems Engineering",
+                    "Game Development",
+                    "Healthcare IT",
+                    "Financial Technology",
+                    "Automotive",
+                    "Aerospace & Defense",
+                    "Telecommunications",
+                    "Other",
+                  ]}
                 />
                 <Select
                   label="Professional Status*"
@@ -295,6 +335,55 @@ const StatsPopup = ({
                     "Very realistic",
                     "Extremely realistic",
                   ]}
+                />
+              </div>
+
+              {/* POST-SIMULATION QUIZ */}
+              <h3 className="text-xl font-medium text-gray-800 dark:text-white mt-8 mb-4">
+                Post‑Simulation Quiz
+              </h3>
+              <div className="space-y-4">
+                {["quiz1", "quiz2", "quiz3", "quiz4", "quiz5"].map((key) => (
+                  <Select
+                    key={key}
+                    label={(() => {
+                      switch (key) {
+                        case "quiz1":
+                          return "Which best describes a product designer's role?*";
+                        case "quiz2":
+                          return "What is the primary goal of requirement engineering?*";
+                        case "quiz3":
+                          return "Which practice helps when a stakeholder refuses to clarify requirements?*";
+                        case "quiz4":
+                          return "Requirement decomposition means:*";
+                        case "quiz5":
+                          return "In this simulation, what did the '5‑tries' stakeholder mechanic teach you?*";
+                        default:
+                          return "";
+                      }
+                    })()}
+                    name={key}
+                    value={formData[key]}
+                    onChange={handleChange}
+                    required
+                    options={quizOptions[key]}
+                  />
+                ))}
+                <Select
+                  label="After playing, how confident are you in your Requirements Engineering skills?*"
+                  name="reConfidence"
+                  value={formData.reConfidence}
+                  onChange={handleChange}
+                  required
+                  options={quizOptions.confidence}
+                />
+                <Select
+                  label="After playing, how confident are you in your Product Design skills?*"
+                  name="pdConfidence"
+                  value={formData.pdConfidence}
+                  onChange={handleChange}
+                  required
+                  options={quizOptions.confidence}
                 />
               </div>
 
@@ -414,14 +503,14 @@ const ThankYou = ({
           ["Correct Decisions", correctAssignments],
           ["Incorrect Decisions", falseSelections],
           ["Total Decisions", totalDecisions],
-          ["Avg. Decision Time", `${averageDecisionTime} s`],
-          ["Total Time", `${simulationTime} s`],
+          ["Avg. Decision Time", `${averageDecisionTime} s`],
+          ["Total Time", `${simulationTime} s`],
         ]}
       />
       <StatsCard
         title="Product Design Performance"
         rows={[
-          ["Time Taken", `${pdStats.timeTaken} s`],
+          ["Time Taken", `${pdStats.timeTaken} s`],
           ["Correct Matches", pdStats.correctMatches],
           ["Incorrect Matches", pdStats.falseMatches],
         ]}
@@ -433,7 +522,7 @@ const ThankYou = ({
         onClick={onRestart}
         className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium py-3 px-8 rounded-xl shadow-lg"
       >
-        Play Again
+        Play Again
       </button>
     </div>
   </div>
