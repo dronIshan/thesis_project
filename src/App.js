@@ -1,9 +1,8 @@
-import React from 'react';
-import ProjectSimulationGame from './ProjectSimulationGame'; 
-import './index.css';
+import "./index.css";
+import REQSIM from "./REQSIM";
 
 const App = () => {
-  return <ProjectSimulationGame />;
+  return <REQSIM />;
 };
 
 export default App;

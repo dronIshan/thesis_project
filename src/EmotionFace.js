@@ -1,11 +1,11 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
 const EmotionFace = ({ emotion }) => {
   const getEyebrowPath = (leftStart, leftEnd, rightStart, rightEnd) => {
     return {
       left: `M60,${leftStart} Q70,${leftEnd} 80,${leftStart}`,
-      right: `M120,${rightStart} Q130,${rightEnd} 140,${rightStart}`
+      right: `M120,${rightStart} Q130,${rightEnd} 140,${rightStart}`,
     };
   };
 
@@ -16,32 +16,35 @@ const EmotionFace = ({ emotion }) => {
   const emotions = {
     neutral: {
       eyebrows: getEyebrowPath(65, 65, 65, 65),
-      mouth: getMouthPath(130, 130, 130)
+      mouth: getMouthPath(130, 130, 130),
     },
     happy: {
       eyebrows: getEyebrowPath(60, 55, 60, 55),
-      mouth: getMouthPath(130, 150, 130)
+      mouth: getMouthPath(130, 150, 130),
     },
     sad: {
       eyebrows: getEyebrowPath(70, 75, 70, 75),
-      mouth: getMouthPath(140, 120, 140)
+      mouth: getMouthPath(140, 120, 140),
     },
     fearful: {
+      // This was not in your game's logic but present in EmotionFace
       eyebrows: getEyebrowPath(55, 50, 55, 50),
-      mouth: getMouthPath(130, 110, 130)
+      mouth: getMouthPath(130, 110, 130),
     },
     angry: {
-      eyebrows: getEyebrowPath(60, 70, 60, 70),
-      mouth: getMouthPath(135, 145, 135)
+      eyebrows: getEyebrowPath(60, 70, 60, 70), // Adjusted based on likely intent for anger
+      mouth: getMouthPath(135, 125, 135), // Slightly adjusted for a more downturned/angry mouth
     },
     surprised: {
+      // This was not in your game's logic but present in EmotionFace
       eyebrows: getEyebrowPath(50, 45, 50, 45),
-      mouth: getMouthPath(140, 170, 140)
+      mouth: getMouthPath(140, 170, 140), // Typically a rounder mouth for surprise
     },
     disgusted: {
+      // This was not in your game's logic but present in EmotionFace
       eyebrows: getEyebrowPath(60, 65, 65, 60),
-      mouth: getMouthPath(135, 115, 140)
-    }
+      mouth: getMouthPath(135, 115, 140),
+    },
     // Add more emotions if needed
   };
 
@@ -51,16 +54,19 @@ const EmotionFace = ({ emotion }) => {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 200 200"
-      className="w-32 h-32"
+      // MODIFICATION: SVG scales to the size of its parent container
+      className="w-full h-full"
     >
       <circle
         cx="100"
         cy="100"
-        r="80"
+        // MODIFICATION: Slightly reduced radius for more visual padding within the viewBox
+        r="75"
         stroke="black"
         strokeWidth="4"
         fill="white"
       />
+      {/* Eyes */}
       <g id="leftEyeGroup" transform="translate(70,80)">
         <motion.circle
           id="leftEye"
@@ -72,7 +78,8 @@ const EmotionFace = ({ emotion }) => {
           transition={{
             repeat: Infinity,
             duration: 5,
-            times: [0, 0.1, 0.2]
+            // Blink quickly, then wait
+            times: [0, 0.05, 0.1, 1], // Adjusted times for a more natural blink interval
           }}
         />
       </g>
@@ -87,10 +94,12 @@ const EmotionFace = ({ emotion }) => {
           transition={{
             repeat: Infinity,
             duration: 5,
-            times: [0, 0.1, 0.2]
+            delay: 0.02, // Slight delay for the second eye for natural blink
+            times: [0, 0.05, 0.1, 1], // Adjusted times
           }}
         />
       </g>
+      {/* Mouth */}
       <motion.path
         id="mouth"
         d={currentEmotion.mouth}
@@ -99,8 +108,9 @@ const EmotionFace = ({ emotion }) => {
         fill="transparent"
         initial={false}
         animate={{ d: currentEmotion.mouth }}
-        transition={{ type: 'spring', stiffness: 100 }}
+        transition={{ type: "spring", stiffness: 120, damping: 10 }} // Adjusted spring
       />
+      {/* Eyebrows */}
       <motion.path
         id="leftEyebrow"
         d={currentEmotion.eyebrows.left}
@@ -109,7 +119,7 @@ const EmotionFace = ({ emotion }) => {
         fill="transparent"
         initial={false}
         animate={{ d: currentEmotion.eyebrows.left }}
-        transition={{ type: 'spring', stiffness: 100 }}
+        transition={{ type: "spring", stiffness: 120, damping: 10 }} // Adjusted spring
       />
       <motion.path
         id="rightEyebrow"
@@ -119,7 +129,7 @@ const EmotionFace = ({ emotion }) => {
         fill="transparent"
         initial={false}
         animate={{ d: currentEmotion.eyebrows.right }}
-        transition={{ type: 'spring', stiffness: 100 }}
+        transition={{ type: "spring", stiffness: 120, damping: 10 }} // Adjusted spring
       />
     </svg>
   );
