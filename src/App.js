@@ -1,9 +1,10 @@
 import React from 'react';
 import ProjectSimulationGame from './ProjectSimulationGame'; 
 import './index.css';
+import ConceptMatchingGame from './ConceptMatchingGame';
 
 const App = () => {
-  return <ProjectSimulationGame />;
+  return <ConceptMatchingGame />;
 };
 
 export default App;
