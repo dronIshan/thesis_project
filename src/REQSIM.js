@@ -12,12 +12,13 @@ const IconAcademicCap = () => (
     fill="currentColor"
     className="w-6 h-6 mr-2 text-indigo-400"
   >
-    <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />
+    {" "}
+    <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />{" "}
     <path
       fillRule="evenodd"
       d="M3.087 9l.54 9.176A3 3 0 006.62 21h10.757a3 3 0 002.995-2.824L20.913 9H3.087zm6.163 3.75A.75.75 0 0110 12h4a.75.75 0 010 1.5h-4a.75.75 0 01-.75-.75z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 const IconStar = () => (
@@ -27,11 +28,12 @@ const IconStar = () => (
     fill="currentColor"
     className="w-4 h-4 mr-1 text-yellow-400"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 const IconExclamationTriangle = () => (
@@ -41,11 +43,12 @@ const IconExclamationTriangle = () => (
     fill="currentColor"
     className="w-4 h-4 mr-1 text-red-400"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.519 13.007a3 3 0 01-2.598 4.5H4.48a3 3 0 01-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 const IconFire = () => (
@@ -55,11 +58,12 @@ const IconFire = () => (
     fill="currentColor"
     className="w-4 h-4 mr-1 text-orange-400"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M12.963 2.286a.75.75 0 00-1.071 1.05l.002.002A17.106 17.106 0 0112 12c0 .206.01.41.029.613l-.001.002a.75.75 0 00.55.696l.002.001a17.604 17.604 0 003.635 1.352l.003.001.004.001a1.5 1.5 0 01.752 2.159.75.75 0 00.38.262c.018.005.036.009.054.013l.002.001a7.53 7.53 0 012.345 1.075.75.75 0 001.002-.21l.002-.002a1.13 1.13 0 011.437-1.612.75.75 0 00.429-1.019l-.001-.004a13.403 13.403 0 00-2.353-4.656l-.003-.003a.75.75 0 00-.656-.36l-.004-.001a1.503 1.503 0 01-1.076-.673.75.75 0 00-.64-.403h-.002q-.003 0-.005.001a6.68 6.68 0 00-1.973-.318l-.002-.002A13.23 13.23 0 0112 3.75c0-.53.045-1.05.132-1.561l.002-.003zM9.75 12c0-.032.002-.063.005-.094A12.923 12.923 0 0012 11.25c.282 0 .56.018.836.053l.001.001.003.001.004.001a.75.75 0 00.68-.535l.002-.002A11.4 11.4 0 0015 9a.75.75 0 00-1.5 0c0 .075-.004.149-.01.222l.002-.002a.75.75 0 00.012 1.273l-.001.002a11.435 11.435 0 00-2.992 1.254l-.003.001a.75.75 0 00-.271 1.017l.002.003a7.433 7.433 0 01.789 4.057.75.75 0 00.659.737l.003.001a7.5 7.5 0 004.422-.323.75.75 0 00.536-.835l-.001-.002a1.506 1.506 0 01.814-1.645.75.75 0 00.378-.818l-.001-.003a5.92 5.92 0 00-1.034-3.213.75.75 0 00-.848-.413A17.683 17.683 0 0112 15.75c-1.598 0-3.137-.205-4.566-.587a.75.75 0 01-.519-.868l.002-.004a18.45 18.45 0 002.823-6.667.75.75 0 00-.608-.86l-.002-.001a13.021 13.021 0 00-2.426-1.043.75.75 0 00-.51.066L6 6.375a.75.75 0 00-.375.65V12c0 .414.336.75.75.75h3.375z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 const IconFolder = () => (
@@ -69,7 +73,8 @@ const IconFolder = () => (
     fill="currentColor"
     className="h-5 w-5 mr-1.5 text-blue-400"
   >
-    <path d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 9.75A3 3 0 014.5 6.75h4.636a1.5 1.5 0 011.214.61L11.79 9h7.71a3 3 0 013 3v1.5a.75.75 0 01-1.5 0V12a1.5 1.5 0 00-1.5-1.5h-7.928a1.5 1.5 0 01-1.214-.61L8.202 7.5H4.5a1.5 1.5 0 00-1.5 1.5V18a1.5 1.5 0 001.5 1.5h15a1.5 1.5 0 001.5-1.5v-4.5a.75.75 0 011.5 0V18a3 3 0 01-3 3h-15a3 3 0 01-3-3V9.75z" />
+    {" "}
+    <path d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 9.75A3 3 0 014.5 6.75h4.636a1.5 1.5 0 011.214.61L11.79 9h7.71a3 3 0 013 3v1.5a.75.75 0 01-1.5 0V12a1.5 1.5 0 00-1.5-1.5h-7.928a1.5 1.5 0 01-1.214-.61L8.202 7.5H4.5a1.5 1.5 0 00-1.5 1.5V18a1.5 1.5 0 001.5 1.5h15a1.5 1.5 0 001.5-1.5v-4.5a.75.75 0 011.5 0V18a3 3 0 01-3 3h-15a3 3 0 01-3-3V9.75z" />{" "}
   </svg>
 );
 const IconDocument = () => (
@@ -79,12 +84,13 @@ const IconDocument = () => (
     fill="currentColor"
     className="h-4 w-4 mr-1.5 text-blue-300 flex-shrink-0"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z"
       clipRule="evenodd"
-    />
-    <path d="M12.971 1.816A5.23 5.23 0 0114.25 1.5c.463 0 .907.067 1.312.191l.006.002a6.71 6.71 0 001.414 5.44V9A1.5 1.5 0 0015.5 7.5h-1.875a3.375 3.375 0 01-3.375-3.375V2.25l-.009-.009a6.75 6.75 0 00-1.993-2.018.75.75 0 00-1.01.048Z" />
+    />{" "}
+    <path d="M12.971 1.816A5.23 5.23 0 0114.25 1.5c.463 0 .907.067 1.312.191l.006.002a6.71 6.71 0 001.414 5.44V9A1.5 1.5 0 0015.5 7.5h-1.875a3.375 3.375 0 01-3.375-3.375V2.25l-.009-.009a6.75 6.75 0 00-1.993-2.018.75.75 0 00-1.01.048Z" />{" "}
   </svg>
 );
 const IconClipboardList = () => (
@@ -94,12 +100,13 @@ const IconClipboardList = () => (
     fill="currentColor"
     className="h-5 w-5 mr-1.5 text-blue-400"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M10.5 3A2.5 2.5 0 008 5.5V6h8V5.5A2.5 2.5 0 0013.5 3h-3zm-2.5 9a.75.75 0 000 1.5h7.5a.75.75 0 000-1.5h-7.5zm.75 2.25a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75z"
       clipRule="evenodd"
-    />
-    <path d="M4.5 6.75A.75.75 0 005.25 6H6v-.5A3.5 3.5 0 019.5 2h5A3.5 3.5 0 0118 5.5V6h.75a.75.75 0 00.75-.75V5.25a3 3 0 00-3-3h-1.5a.75.75 0 00-.75.75V3A1.5 1.5 0 0013.5 1.5h-3A1.5 1.5 0 009 3v.75a.75.75 0 00-.75.75V6H3.75A.75.75 0 003 6.75v11.5a3 3 0 003 3h12a3 3 0 003-3V6.75a.75.75 0 00-.75-.75H18v3.75a.75.75 0 01-1.5 0V6.75H6v12a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5V6.75H6V6.75z" />
+    />{" "}
+    <path d="M4.5 6.75A.75.75 0 005.25 6H6v-.5A3.5 3.5 0 019.5 2h5A3.5 3.5 0 0118 5.5V6h.75a.75.75 0 00.75-.75V5.25a3 3 0 00-3-3h-1.5a.75.75 0 00-.75.75V3A1.5 1.5 0 0013.5 1.5h-3A1.5 1.5 0 009 3v.75a.75.75 0 00-.75.75V6H3.75A.75.75 0 003 6.75v11.5a3 3 0 003 3h12a3 3 0 003-3V6.75a.75.75 0 00-.75-.75H18v3.75a.75.75 0 01-1.5 0V6.75H6v12a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5V6.75H6V6.75z" />{" "}
   </svg>
 );
 const IconDragHandle = () => (
@@ -111,11 +118,12 @@ const IconDragHandle = () => (
     stroke="currentColor"
     className="w-4 h-4 text-gray-500 mr-1.5 opacity-60 flex-shrink-0"
   >
+    {" "}
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M4 6h16M4 12h16M4 18h16"
-    />
+    />{" "}
   </svg>
 );
 const IconUserCircle = () => (
@@ -125,11 +133,12 @@ const IconUserCircle = () => (
     fill="currentColor"
     className="w-5 h-5 mr-2 text-green-400"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 const IconLightBulb = () => (
@@ -139,7 +148,8 @@ const IconLightBulb = () => (
     fill="currentColor"
     className="h-5 w-5 mr-1.5"
   >
-    <path d="M12 2.25a.75.75 0 01.75.75v2.033A3.004 3.004 0 0115.75 8c0 .749-.22 1.436-.607 2.007a.75.75 0 01-1.22-.7C13.94 8.802 14.25 8.41 14.25 8a1.5 1.5 0 00-3 0c0 .41.31.702.327.707a.75.75 0 01-1.22.701A3.002 3.002 0 019.75 8c0-1.03.538-1.94.1332-2.542V3a.75.75 0 01.75-.75zM8.25 9.75A2.25 2.25 0 006 12v3A2.25 2.25 0 008.25 17.25h7.5A2.25 2.25 0 0018 15v-3A2.25 2.25 0 0015.75 9.75h-7.5zM12 21a.75.75 0 01-.75-.75v-1.5a.75.75 0 011.5 0v1.5A.75.75 0 0112 21z" />
+    {" "}
+    <path d="M12 2.25a.75.75 0 01.75.75v2.033A3.004 3.004 0 0115.75 8c0 .749-.22 1.436-.607 2.007a.75.75 0 01-1.22-.7C13.94 8.802 14.25 8.41 14.25 8a1.5 1.5 0 00-3 0c0 .41.31.702.327.707a.75.75 0 01-1.22.701A3.002 3.002 0 019.75 8c0-1.03.538-1.94.1332-2.542V3a.75.75 0 01.75-.75zM8.25 9.75A2.25 2.25 0 006 12v3A2.25 2.25 0 008.25 17.25h7.5A2.25 2.25 0 0018 15v-3A2.25 2.25 0 0015.75 9.75h-7.5zM12 21a.75.75 0 01-.75-.75v-1.5a.75.75 0 011.5 0v1.5A.75.75 0 0112 21z" />{" "}
   </svg>
 );
 const IconInformationCircle = () => (
@@ -149,11 +159,12 @@ const IconInformationCircle = () => (
     fill="currentColor"
     className="w-5 h-5 mr-2 flex-shrink-0"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.04-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 const IconCheckCircle = () => (
@@ -163,11 +174,12 @@ const IconCheckCircle = () => (
     fill="currentColor"
     className="w-5 h-5 mr-2"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.06-1.06l-3.103 3.104-1.497-1.497a.75.75 0 00-1.06 1.06l2.027 2.027a.75.75 0 001.06 0l3.64-3.64z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 const IconXCircle = () => (
@@ -177,11 +189,12 @@ const IconXCircle = () => (
     fill="currentColor"
     className="w-5 h-5 mr-2"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm10.28-2.56a.75.75 0 00-1.06 1.06L12.94 12l-1.47 1.47a.75.75 0 101.06 1.06L14.47 12l1.47-1.47a.75.75 0 00-1.06-1.06L12 12.94l-1.47-1.47z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 const IconTrophy = () => (
@@ -191,11 +204,12 @@ const IconTrophy = () => (
     fill="currentColor"
     className="h-14 w-14 mx-auto text-yellow-400 mb-3"
   >
+    {" "}
     <path
       fillRule="evenodd"
       d="M3.75 3.75A.75.75 0 003 4.5v15A.75.75 0 003.75 21h16.5a.75.75 0 00.75-.75V13.643c0-.421-.174-.832-.485-1.133L15.864 8.24a.75.75 0 00-1.06 0l-1.015 1.015a.75.75 0 01-1.06 0l-1.126-1.125a3 3 0 00-4.242 0L3.08 12.388a.75.75 0 01-1.06-1.061l4.287-4.287a4.5 4.5 0 016.364 0l1.125 1.125a.75.75 0 001.06 0l1.015-1.015a.75.75 0 011.06 0l4.636 4.636a1.5 1.5 0 01.485 1.133V19.5A.75.75 0 0021 18.75v-7.683a.75.75 0 00-.22-.53L16.03 5.79a4.5 4.5 0 00-6.363 0L7.91 7.547a.75.75 0 01-1.06-1.06L11.137 2.2a3 3 0 014.242 0l4.091 4.09a3 3 0 01.83 2.122V19.5a1.5 1.5 0 01-1.5 1.5H3.75A1.5 1.5 0 012.25 19.5v-15A1.5 1.5 0 013.75 2.25h2.733a.75.75 0 000-1.5H3.75zM9 8.25a.75.75 0 000 1.5h6a.75.75 0 000-1.5H9z"
       clipRule="evenodd"
-    />
+    />{" "}
   </svg>
 );
 // --- End SVG Icons ---
@@ -237,12 +251,22 @@ export default function REQSIM() {
   const [streakCount, setStreakCount] = useState(0);
   const [showFeedback, setShowFeedback] = useState(null);
   const [gameInitialized, setGameInitialized] = useState(false);
+  const [isCrossDomain, setIsCrossDomain] = useState(false); // State for cross-domain checkbox
+  const [gameMode, setGameMode] = useState("single"); // 'single' or 'multiplayer'
+  const [groupName, setGroupName] = useState("");
 
   useEffect(() => {
     if (streakCount > maxStreak) {
       setMaxStreak(streakCount);
     }
   }, [streakCount, maxStreak]);
+
+  useEffect(() => {
+    if (isCrossDomain) {
+      setHint("");
+      setNpcMood(1);
+    }
+  }, [isCrossDomain]);
 
   const setupNewScenario = (scenarioList) => {
     if (scenarioList && scenarioList.length > 0) {
@@ -288,13 +312,11 @@ export default function REQSIM() {
 
     if (newConcepts.length > 0 && newScenarios.length > 0) {
       setGameInitialized(true);
-      // Update upload status only if materials caused this reset
       if (materials.length > 0) {
+        // materials state now stores the File object
         setUploadStatus(`${materials[0].name} processed. Game ready!`);
       } else {
-        setUploadStatus(
-          "Game ready with default content (if any) or processed content."
-        );
+        setUploadStatus("Game ready with dynamic content.");
       }
     } else {
       setGameInitialized(false);
@@ -313,21 +335,22 @@ export default function REQSIM() {
   const processFiles = async (files) => {
     if (files.length === 0) return;
 
-    const fileToProcess = files[0]; // Process one file at a time
+    const fileToProcess = files[0];
 
-    // Basic client-side validation for example (more robust validation can be added)
     const allowedTypes = [
       "text/plain",
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       "application/vnd.ms-powerpoint",
     ];
+    const allowedExtensions = [".txt", ".pdf", ".pptx", ".ppt"];
+
+    const fileExtension =
+      "." + fileToProcess.name.split(".").pop().toLowerCase();
+
     if (
       !allowedTypes.includes(fileToProcess.type) &&
-      !fileToProcess.name.endsWith(".txt") &&
-      !fileToProcess.name.endsWith(".pdf") &&
-      !fileToProcess.name.endsWith(".pptx") &&
-      !fileToProcess.name.endsWith(".ppt")
+      !allowedExtensions.includes(fileExtension)
     ) {
       setUploadStatus(
         "Unsupported file type. Please use .txt, .pdf, or .pptx/.ppt."
@@ -347,6 +370,7 @@ export default function REQSIM() {
 
     const formData = new FormData();
     formData.append("course_material_file", fileToProcess);
+    formData.append("isCrossDomain", isCrossDomain.toString()); // Send the cross-domain flag
 
     try {
       const response = await fetch(
@@ -360,7 +384,10 @@ export default function REQSIM() {
       if (!response.ok) {
         const errData = await response
           .json()
-          .catch(() => ({ error: "Server error processing file." }));
+          .catch(() => ({
+            error:
+              "Server error processing file. Please ensure the backend is running and the file type is supported by the server.",
+          }));
         throw new Error(
           errData.error || `HTTP error! status: ${response.status}`
         );
@@ -380,12 +407,13 @@ export default function REQSIM() {
         setShowFeedback({
           type: "info",
           message:
+            data.error ||
             "AI could not generate content from this material. Try different content or check if the file has readable text.",
         });
-        // Still call resetGame to clear out old data and show empty state correctly
         resetGame([], []);
-        setUploadStatus("No game content generated. Please try another file.");
-        // Do not set materials if processing failed to produce content
+        setUploadStatus(
+          data.error || "No game content generated. Please try another file."
+        );
       } else {
         const validatedScenarios = data.scenarios.map((s) => ({
           ...s,
@@ -468,7 +496,9 @@ export default function REQSIM() {
 
     const conceptIdsArray = Array.isArray(scenarioToMatch.conceptIds)
       ? scenarioToMatch.conceptIds
-      : [scenarioToMatch.conceptIds];
+      : scenarioToMatch.conceptIds
+      ? [scenarioToMatch.conceptIds]
+      : [];
     const isCorrectConceptForScenario = conceptIdsArray.includes(
       targetConcept.id
     );
@@ -580,7 +610,17 @@ export default function REQSIM() {
       setNpcMood(2);
     }
 
-    setHint("");
+    if (
+      !(
+        isCorrectConceptForScenario &&
+        !isAlreadyResolvedForThisScenario &&
+        resolvedConceptsForCurrentScenario.size !== conceptIdsArray.length
+      )
+    ) {
+      // Clear hint only if scenario is fully resolved or an error occurred, or re-dropped on resolved part
+      // Keep hint if it's a correct partial find and more parts are needed.
+      setHint("");
+    }
 
     setTimeout(() => {
       setShowFeedback(null);
@@ -628,7 +668,7 @@ export default function REQSIM() {
   };
 
   const getNpcHint = async () => {
-    if (!currentScenario || isLoadingHint) return;
+    if (!currentScenario || isLoadingHint || isCrossDomain) return; // Prevent hint in cross-domain
 
     setIsLoadingHint(true);
     const hintPenalty = 10;
@@ -669,10 +709,7 @@ export default function REQSIM() {
       });
     } catch (error) {
       console.error("Error fetching NPC hint:", error);
-      setHint("Sorry, I'm a bit stumped myself right now! Try your best.");
-      // Do not show the penalty feedback if the hint fetch failed
-      // setShowFeedback({type: "error", message: "Could not fetch hint."});
-      // The hint state itself will show the error.
+      setHint("Sorry, I'm a bit stumped right now! Try your best.");
     } finally {
       setIsLoadingHint(false);
     }
@@ -685,6 +722,14 @@ export default function REQSIM() {
         Challenge Complete!
       </h2>
       <div className="space-y-1 text-base mb-4">
+        <p>
+          Game Mode:{" "}
+          <span className="font-semibold text-gray-300">
+            {gameMode === "multiplayer"
+              ? `Group (${groupName || "Unnamed"})`
+              : "Single Player"}
+          </span>
+        </p>
         <p>
           Final Score:{" "}
           <span className="font-semibold text-green-400">{score}</span>
@@ -713,7 +758,7 @@ export default function REQSIM() {
         className="mt-3 ml-3 px-5 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition text-base shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
         onClick={() => {
           setGameInitialized(false);
-          resetGame(); // Full reset to clear concepts/scenarios for new upload
+          resetGame();
         }}
       >
         Load New Materials
@@ -721,7 +766,6 @@ export default function REQSIM() {
     </div>
   );
 
-  // Main return JSX
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans text-sm">
       <header
@@ -797,7 +841,7 @@ export default function REQSIM() {
               {totalScenariosInitialCount}
             </p>
             <p>
-              Current Scenario:{" "}
+              Current Attempt:{" "}
               {index + 1 > totalScenariosInitialCount && !currentScenario
                 ? totalScenariosInitialCount
                 : Math.min(index + 1, totalScenariosInitialCount)}{" "}
@@ -831,6 +875,79 @@ export default function REQSIM() {
         )}
 
         <div className="lg:col-span-1 space-y-4">
+          {/* Mode Selection and Material Upload - Combined and shown if game not initialized */}
+          {!gameInitialized && !isLoadingMaterials && (
+            <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md">
+              <h2 className="text-lg font-semibold mb-3 text-center text-indigo-300">
+                Welcome to REQSIM!
+              </h2>
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Select Game Mode:
+                </label>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setGameMode("single")}
+                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                      gameMode === "single"
+                        ? "bg-indigo-500 text-white ring-2 ring-indigo-300"
+                        : "bg-gray-700 hover:bg-gray-600"
+                    }`}
+                  >
+                    Single Player
+                  </button>
+                  <button
+                    onClick={() => setGameMode("multiplayer")}
+                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                      gameMode === "multiplayer"
+                        ? "bg-teal-500 text-white ring-2 ring-teal-300"
+                        : "bg-gray-700 hover:bg-gray-600"
+                    }`}
+                  >
+                    Group Mode
+                  </button>
+                </div>
+              </div>
+              {gameMode === "multiplayer" && (
+                <div className="mb-3">
+                  <label
+                    htmlFor="groupNameInput"
+                    className="block text-xs font-medium text-gray-300 mb-1"
+                  >
+                    Group/Session Name (Optional):
+                  </label>
+                  <input
+                    type="text"
+                    id="groupNameInput"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 text-gray-200 text-xs rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="e.g., CS401_GroupA"
+                  />
+                </div>
+              )}
+              <div className="mt-3">
+                {" "}
+                {/* Moved checkbox here */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="crossDomainCheckbox"
+                    checked={isCrossDomain}
+                    onChange={(e) => setIsCrossDomain(e.target.checked)}
+                    className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-600 bg-gray-700"
+                  />
+                  <label
+                    htmlFor="crossDomainCheckbox"
+                    className="ml-2 text-xs text-gray-300 select-none"
+                  >
+                    Use Cross-Domain Content (Non-RE Specific)
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div
             className={`bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg border border-dashed border-blue-500/70 shadow-md transition-all ${
               isLoadingMaterials
@@ -849,16 +966,16 @@ export default function REQSIM() {
               multiple={false}
               className="hidden"
               disabled={isLoadingMaterials}
-              accept=".txt,.pdf,.pptx,.ppt" // Allow multiple types
+              accept=".txt,.pdf,.pptx,.ppt"
             />
             <h2 className="text-lg font-semibold mb-2 flex items-center text-blue-300">
               <IconFolder /> Course Materials
             </h2>
-            <div className="min-h-[80px] p-3 bg-gray-700/40 rounded-md flex flex-col items-center justify-center transition-all">
+            <div className="min-h-[60px] p-3 bg-gray-700/40 rounded-md flex flex-col items-center justify-center transition-all">
               {isLoadingMaterials ? (
                 <div className="flex flex-col items-center">
                   <svg
-                    className="animate-spin h-6 w-6 text-blue-300 mb-2"
+                    className="animate-spin h-5 w-5 text-blue-300 mb-1"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -987,7 +1104,7 @@ export default function REQSIM() {
                 )}
               </div>
 
-              {currentScenario && (
+              {currentScenario && !isCrossDomain && (
                 <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg border border-green-500/50 shadow-md">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
@@ -1078,13 +1195,14 @@ export default function REQSIM() {
               )}
             </>
           ) : (
-            <div className="lg:col-span-4 flex items-center justify-center min-h-[400px] bg-gray-800/50 rounded-lg">
-              <p className="text-xl text-center text-gray-400">
-                {isLoadingMaterials
-                  ? "Generating your REQSIM experience..."
-                  : "Upload course materials (.txt, .pdf, .pptx) to begin REQSIM!"}
-              </p>
-            </div>
+            !isLoadingMaterials && ( // Only show this specific message if not loading and not initialized
+              <div className="lg:col-span-4 flex items-center justify-center min-h-[400px] bg-gray-800/50 rounded-lg p-6">
+                <p className="text-xl text-center text-gray-400">
+                  Please upload course materials using the panel on the left to
+                  start your REQSIM challenge!
+                </p>
+              </div>
+            )
           )}
         </div>
 
@@ -1153,10 +1271,10 @@ export default function REQSIM() {
             ))}
           </div>
         ) : gameInitialized && concepts.length === 0 && !isLoadingMaterials ? (
-          <div className="lg:col-span-3 flex items-center justify-center min-h-[400px]">
+          <div className="lg:col-span-3 flex items-center justify-center min-h-[400px] bg-gray-800/50 rounded-lg p-6">
             <p className="text-xl text-gray-500 text-center">
-              No concepts or scenarios were generated. <br />
-              Please try a different file or check the material content.
+              No concepts or scenarios were generated from the material. <br />{" "}
+              Please try a different file or adjust its content.
             </p>
           </div>
         ) : null}
