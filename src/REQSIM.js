@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import EmotionFace from "./EmotionFace";
 import CountdownTimer from "./CountdownTimer";
 
-// --- SVG Icons (Keep all your icon definitions as they were in the last full version) ---
+// --- SVG Icons (Keep all your icon definitions as they are) ---
 const IconAcademicCap = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -381,16 +381,20 @@ export default function REQSIM() {
       };
       setCurrentScenario(nextScenario);
       setResolvedConceptsForCurrentScenario(new Set());
-      logInteraction("SCENARIO_PRESENTED", {
-        scenarioId: nextScenario.id,
-        text: nextScenario.text,
-        conceptIds: nextScenario.conceptIds,
-      });
+      // Avoid logging SCENARIO_PRESENTED if it's just the resetGame call with empty list
+      if (nextScenario.id !== undefined) {
+        logInteraction("SCENARIO_PRESENTED", {
+          scenarioId: nextScenario.id,
+          text: nextScenario.text,
+          conceptIds: nextScenario.conceptIds,
+        });
+      }
     } else {
       setCurrentScenario(null);
       if (gameInitialized && concepts.length > 0) {
+        // Check if game was actually played through
         logInteraction("GAME_COMPLETED_ALL_SCENARIOS");
-        setShowReportModal(true);
+        setShowReportModal(true); // Show report modal when game ends
       }
     }
   };
@@ -418,7 +422,7 @@ export default function REQSIM() {
     setGameInteractionsLog([]);
     setShowReportModal(false);
 
-    if (newConcepts.length > 0 || newScenarios.length > 0) {
+    if (newConcepts.length > 0 && newScenarios.length > 0) {
       setGameInitialized(true);
       let statusMsg = "Game ready! ";
       const loadedInputs = [];
@@ -757,7 +761,7 @@ export default function REQSIM() {
           type: "success",
           message: `Scenario complete! All ${
             conceptIdsArray.length
-          } concepts found. Total +${totalPointsForScenario} pts. ${
+          } concepts found. +${totalPointsForScenario} total pts. ${
             streakCount + 1 > 1 ? `Streak: ${streakCount + 1}` : ""
           }`,
         });
@@ -968,18 +972,17 @@ export default function REQSIM() {
       return;
     }
 
-    let tempScore = 0; // Auto-complete starts score from 0 for this "run"
+    let tempScore = 0;
     let tempCorrectMatches = 0;
     let tempStreak = 0;
-    let tempMaxStreak = 0; // Calculate max streak for this auto-run
+    let tempMaxStreak = 0;
     let updatedConceptsState = JSON.parse(
       JSON.stringify(
         concepts.map((c) => ({ ...c, scenarios: [], emotion: "neutral" }))
       )
     );
-    let newInteractionsLog = [];
+    let newInteractionsLog = [...gameInteractionsLog]; // Start with existing logs if any from partial play
 
-    // Use originalGeneratedScenarios for auto-completion to ensure all scenarios are processed
     originalGeneratedScenarios.forEach((scenario, scIdx) => {
       const scenarioConceptIds = Array.isArray(scenario.conceptIds)
         ? scenario.conceptIds
@@ -987,7 +990,7 @@ export default function REQSIM() {
         ? [scenario.conceptIds]
         : [];
       let pointsForThisScenario = 0;
-      let currentAutoScenarioResolvedParts = new Set();
+      let autoResolvedPartsForThisScenario = new Set();
 
       newInteractionsLog.push({
         timestamp: new Date().toISOString(),
@@ -997,7 +1000,7 @@ export default function REQSIM() {
         conceptIds: scenario.conceptIds,
         currentScore: tempScore,
         currentErrors: 0,
-        currentStreak: tempStreak,
+        currentStreak: tempStreak, // Use local temp values for log consistency
       });
 
       scenarioConceptIds.forEach((correctConceptId) => {
@@ -1006,9 +1009,9 @@ export default function REQSIM() {
         );
         if (
           targetConcept &&
-          !currentAutoScenarioResolvedParts.has(correctConceptId)
+          !autoResolvedPartsForThisScenario.has(correctConceptId)
         ) {
-          currentAutoScenarioResolvedParts.add(correctConceptId);
+          autoResolvedPartsForThisScenario.add(correctConceptId);
           const pointsPerPart = Math.max(
             5,
             Math.round(
@@ -1043,7 +1046,7 @@ export default function REQSIM() {
             isNewPartResolved: true,
             latencyMs: 10,
             resolvedPartsBeforeDrop: Array.from(
-              new Set([...currentAutoScenarioResolvedParts]).delete(
+              new Set([...autoResolvedPartsForThisScenario]).delete(
                 correctConceptId
               )
             ),
@@ -1068,12 +1071,12 @@ export default function REQSIM() {
     setScore(tempScore);
     setCorrectMatches(tempCorrectMatches);
     setStreakCount(tempStreak);
-    setMaxStreak(tempMaxStreak); // Set the max streak achieved during auto-completion
-    setErrors(0); // Assuming auto-complete makes no errors
+    setMaxStreak(tempMaxStreak);
+    setErrors(0);
     setNpcMood(0);
     setConcepts(updatedConceptsState);
     setScenarios([]);
-    setCurrentScenario(null); // This should trigger the report modal via setupNewScenario
+    setCurrentScenario(null); // THIS WILL CAUSE setupNewScenario to run
     setIndex(totalScenariosInitialCount);
     setResolvedConceptsForCurrentScenario(new Set());
     setGameInteractionsLog(newInteractionsLog);
@@ -1083,11 +1086,14 @@ export default function REQSIM() {
       message: "Game auto-completed for testing!",
     });
     setTimeout(() => setShowFeedback(null), 2000);
-    // Explicitly show modal after state updates for auto-completion
-    // Note: setCurrentScenario(null) in setupNewScenario will also try to set this.
-    // This direct call ensures it happens even if effect timings are tricky.
-    // However, it might lead to it being called twice. Better to rely on the game end logic.
-    // The call to setupNewScenario([]) after setScenarios([]) should handle setting currentScenario to null.
+
+    // Explicitly trigger modal if setCurrentScenario(null) doesn't do it reliably enough via its effect
+    // This ensures the report always shows after auto-complete
+    if (gameInitialized && updatedConceptsState.length > 0) {
+      // Double check conditions
+      logInteraction("AUTO_GAME_COMPLETED_AND_REPORT_SHOWN");
+      setShowReportModal(true);
+    }
   };
 
   // --- GameReportModal Component ---
@@ -1336,7 +1342,7 @@ export default function REQSIM() {
                 Scenarios Resolved:{" "}
                 <span className="font-semibold">
                   {correctMatches} / {totalScenariosInitialCount} (
-                  {overallDropAccuracy.toFixed(1)}% scenario accuracy)
+                  {overallDropAccuracy.toFixed(1)}% accuracy)
                 </span>
               </p>
               <p>
@@ -1474,7 +1480,6 @@ export default function REQSIM() {
     );
   };
 
-  // Main return JSX
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans text-sm">
       <header
@@ -1590,8 +1595,6 @@ export default function REQSIM() {
         <div className="lg:col-span-1 space-y-4">
           {(!gameInitialized || isLoadingMaterials) && (
             <div className="space-y-4">
-              {" "}
-              {/* Wrapper for the two setup boxes */}
               <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md space-y-3">
                 <h2 className="text-md font-semibold text-center text-indigo-300 border-b border-gray-700 pb-2">
                   1. Game Setup & Main Content
@@ -1750,7 +1753,6 @@ export default function REQSIM() {
                     </div>
                   </div>
                 </div>
-
                 <div className="pt-2">
                   <div className="flex items-center">
                     <input
@@ -1946,7 +1948,7 @@ export default function REQSIM() {
                       />{" "}
                     </div>
                   </motion.div>
-                ) : null /* Report modal will be shown via state */}
+                ) : null /* Modal is shown instead by showReportModal state */}
               </div>
 
               {currentScenario && !isCrossDomain && (
