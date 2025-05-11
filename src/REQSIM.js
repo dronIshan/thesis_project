@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import EmotionFace from "./EmotionFace";
 import CountdownTimer from "./CountdownTimer";
 
-// --- SVG Icons ---
+// --- SVG Icons (definitions unchanged) ---
 const IconAcademicCap = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -212,6 +212,37 @@ const IconTrophy = () => (
     />{" "}
   </svg>
 );
+const IconPlusCircle = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="w-5 h-5 mr-1.5 text-sky-400"
+  >
+    {" "}
+    <path
+      fillRule="evenodd"
+      d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 9a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25V15a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25V9z"
+      clipRule="evenodd"
+    />{" "}
+  </svg>
+);
+const IconBeaker = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className="w-5 h-5 mr-1.5 text-teal-400"
+  >
+    {" "}
+    <path
+      fillRule="evenodd"
+      d="M10.494 2.278c-.831-1.111-2.683-1.111-3.514 0C6.393 3.054 6 3.932 6 4.846v5.504a2.626 2.626 0 00.388 1.346l2.08 3.121A2.626 2.626 0 0010.5 15.75h3a2.625 2.625 0 002.032-.928l2.08-3.121a2.626 2.626 0 00.388-1.346V4.846c0-.913-.393-1.792-.98-2.567zM9.313 8.176a.75.75 0 011.06-1.06l1.048 1.048 1.048-1.048a.75.75 0 111.06 1.06L12.53 9.237l1.048 1.048a.75.75 0 11-1.06 1.06L11.47 10.297l-1.048 1.048a.75.75 0 01-1.06-1.06L10.413 9.237l-1.047-1.048a.75.75 0 01-.053-.013z"
+      clipRule="evenodd"
+    />{" "}
+    <path d="M6 19.5a2.25 2.25 0 012.25-2.25h7.5a2.25 2.25 0 012.25 2.25V21a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75v-1.5z" />{" "}
+  </svg>
+);
 // --- End SVG Icons ---
 
 const BACKEND_URL =
@@ -233,10 +264,17 @@ export default function REQSIM() {
   const [hint, setHint] = useState("");
   const [isLoadingHint, setIsLoadingHint] = useState(false);
   const [isLoadingMaterials, setIsLoadingMaterials] = useState(false);
-  const [materials, setMaterials] = useState([]);
-  const [uploadStatus, setUploadStatus] = useState(
-    "Upload course materials (txt, pdf, pptx) to begin!"
+
+  const [mainMaterialFile, setMainMaterialFile] = useState(null);
+  const [mainMaterialUploadStatus, setMainMaterialUploadStatus] = useState(
+    "Click to select main material file..."
   );
+
+  const [uploadStatus, setUploadStatus] = useState(
+    "Upload materials and/or provide context to begin!"
+  );
+  const [materialsForDisplay, setMaterialsForDisplay] = useState([]);
+
   const [highlightedConceptId, setHighlightedConceptId] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [index, setIndex] = useState(0);
@@ -246,14 +284,21 @@ export default function REQSIM() {
   const [maxStreak, setMaxStreak] = useState(0);
 
   const headerRef = useRef();
-  const fileInputRef = useRef(null);
+  const mainMaterialInputRef = useRef(null);
+  const domainContextFileInputRef = useRef(null);
   const [timePaused, setTimePaused] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
   const [showFeedback, setShowFeedback] = useState(null);
   const [gameInitialized, setGameInitialized] = useState(false);
-  const [isCrossDomain, setIsCrossDomain] = useState(false); // State for cross-domain checkbox
-  const [gameMode, setGameMode] = useState("single"); // 'single' or 'multiplayer'
+  const [isCrossDomain, setIsCrossDomain] = useState(false);
+  const [gameMode, setGameMode] = useState("single");
   const [groupName, setGroupName] = useState("");
+
+  const [domainContextFile, setDomainContextFile] = useState(null);
+  const [domainContextText, setDomainContextText] = useState("");
+  const [domainContextFileStatus, setDomainContextFileStatus] = useState(
+    "Upload domain context file (optional)"
+  );
 
   useEffect(() => {
     if (streakCount > maxStreak) {
@@ -310,20 +355,33 @@ export default function REQSIM() {
     setMaxStreak(0);
     setShowFeedback(null);
 
-    if (newConcepts.length > 0 && newScenarios.length > 0) {
+    if (newConcepts.length > 0 || newScenarios.length > 0) {
       setGameInitialized(true);
-      if (materials.length > 0) {
-        // materials state now stores the File object
-        setUploadStatus(`${materials[0].name} processed. Game ready!`);
+      let statusMsg = "Game ready! ";
+      const loadedFiles = [];
+      if (mainMaterialFile)
+        loadedFiles.push(`'${mainMaterialFile.name}' (Main)`);
+      if (domainContextFile)
+        loadedFiles.push(`'${domainContextFile.name}' (Domain)`);
+      else if (domainContextText.trim() && !domainContextFile)
+        loadedFiles.push("Typed Domain Context");
+
+      if (loadedFiles.length > 0) {
+        statusMsg = `Using: ${loadedFiles.join(" & ")}. Game ready!`;
+      } else if (isCrossDomain) {
+        statusMsg =
+          "Ready for cross-domain content generation (no specific files loaded).";
       } else {
-        setUploadStatus("Game ready with dynamic content.");
+        // Fallback if initialized but no files (e.g. default content if implemented)
+        statusMsg = "Game ready with generated content.";
       }
+      setUploadStatus(statusMsg.trim());
     } else {
       setGameInitialized(false);
       setUploadStatus(
-        "Upload course materials (txt, pdf, pptx) to begin REQSIM!"
+        "Upload materials and/or provide context to begin REQSIM!"
       );
-      setMaterials([]);
+      setMaterialsForDisplay([]);
     }
   };
 
@@ -332,45 +390,84 @@ export default function REQSIM() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const processFiles = async (files) => {
-    if (files.length === 0) return;
+  const handleMainMaterialFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      setMainMaterialFile(files[0]);
+      // Update status only if not currently loading/processing
+      if (!isLoadingMaterials) {
+        setUploadStatus(
+          `Main material: ${files[0].name}. Add domain context or generate.`
+        );
+      }
+    } else {
+      setMainMaterialFile(null);
+      if (!isLoadingMaterials) {
+        setUploadStatus("Click to select main material file...");
+      }
+    }
+    e.target.value = null;
+  };
 
-    const fileToProcess = files[0];
+  const handleDomainContextFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      setDomainContextFile(files[0]);
+      setDomainContextText("");
+      setDomainContextFileStatus(`Context File: ${files[0].name}`);
+    } else {
+      setDomainContextFile(null);
+      setDomainContextFileStatus("Upload domain context file (optional)");
+    }
+    e.target.value = null;
+  };
 
-    const allowedTypes = [
-      "text/plain",
-      "application/pdf",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "application/vnd.ms-powerpoint",
-    ];
-    const allowedExtensions = [".txt", ".pdf", ".pptx", ".ppt"];
-
-    const fileExtension =
-      "." + fileToProcess.name.split(".").pop().toLowerCase();
-
+  const triggerContentGeneration = async () => {
     if (
-      !allowedTypes.includes(fileToProcess.type) &&
-      !allowedExtensions.includes(fileExtension)
+      !mainMaterialFile &&
+      !isCrossDomain &&
+      !domainContextText.trim() &&
+      !domainContextFile
     ) {
-      setUploadStatus(
-        "Unsupported file type. Please use .txt, .pdf, or .pptx/.ppt."
-      );
       setShowFeedback({
         type: "error",
-        message: "Unsupported file. Try .txt, .pdf, or .pptx.",
+        message:
+          "Please provide a main course material file, or specify domain context if using cross-domain mode.",
       });
-      setTimeout(() => setShowFeedback(null), 3000);
+      setTimeout(() => setShowFeedback(null), 4000);
+      return;
+    }
+    if (
+      isCrossDomain &&
+      !mainMaterialFile &&
+      !domainContextFile &&
+      !domainContextText.trim()
+    ) {
+      setShowFeedback({
+        type: "error",
+        message:
+          "For cross-domain mode, please provide either main material, a domain context file, or type domain context text.",
+      });
+      setTimeout(() => setShowFeedback(null), 4000);
       return;
     }
 
     setIsLoadingMaterials(true);
-    setUploadStatus(`Uploading and processing '${fileToProcess.name}'...`);
+    setUploadStatus(`Processing inputs... This may take a moment.`);
     setTimePaused(true);
     setGameInitialized(false);
 
     const formData = new FormData();
-    formData.append("course_material_file", fileToProcess);
-    formData.append("isCrossDomain", isCrossDomain.toString()); // Send the cross-domain flag
+    if (mainMaterialFile) {
+      formData.append("course_material_file", mainMaterialFile);
+    }
+    formData.append("isCrossDomain", isCrossDomain.toString());
+
+    if (domainContextText.trim()) {
+      formData.append("domain_context_text", domainContextText.trim());
+    } else if (domainContextFile) {
+      formData.append("domain_context_file", domainContextFile);
+    }
 
     try {
       const response = await fetch(
@@ -381,41 +478,40 @@ export default function REQSIM() {
         }
       );
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errData = await response
-          .json()
-          .catch(() => ({
-            error:
-              "Server error processing file. Please ensure the backend is running and the file type is supported by the server.",
-          }));
         throw new Error(
-          errData.error || `HTTP error! status: ${response.status}`
+          responseData.error || `HTTP error! status: ${response.status}`
         );
       }
 
-      const data = await response.json();
-
       if (
-        !data.concepts ||
-        !data.scenarios ||
-        !Array.isArray(data.concepts) ||
-        !Array.isArray(data.scenarios)
+        !responseData.concepts ||
+        !responseData.scenarios ||
+        !Array.isArray(responseData.concepts) ||
+        !Array.isArray(responseData.scenarios)
       ) {
         throw new Error("Received invalid data structure from server.");
       }
-      if (data.concepts.length === 0 || data.scenarios.length === 0) {
+      if (
+        responseData.concepts.length === 0 ||
+        responseData.scenarios.length === 0
+      ) {
         setShowFeedback({
           type: "info",
           message:
-            data.error ||
+            responseData.error ||
             "AI could not generate content from this material. Try different content or check if the file has readable text.",
         });
         resetGame([], []);
         setUploadStatus(
-          data.error || "No game content generated. Please try another file."
+          responseData.error ||
+            "No game content generated. Please try another file."
         );
+        setMaterialsForDisplay([]);
       } else {
-        const validatedScenarios = data.scenarios.map((s) => ({
+        const validatedScenarios = responseData.scenarios.map((s) => ({
           ...s,
           conceptIds: Array.isArray(s.conceptIds)
             ? s.conceptIds
@@ -423,20 +519,33 @@ export default function REQSIM() {
             ? [s.conceptIds]
             : [],
         }));
-        setMaterials([fileToProcess]);
-        resetGame(data.concepts, validatedScenarios);
-        setShowFeedback({
-          type: "success",
-          message: "Materials processed successfully!",
-        });
-        setTimeout(() => setShowFeedback(null), 3000);
+
+        let currentLoadedFilesInfo = [];
+        if (mainMaterialFile)
+          currentLoadedFilesInfo.push({
+            name: mainMaterialFile.name,
+            type: "Main Material",
+          });
+        if (domainContextFile)
+          currentLoadedFilesInfo.push({
+            name: domainContextFile.name,
+            type: "Domain Context File",
+          });
+        else if (domainContextText.trim())
+          currentLoadedFilesInfo.push({
+            name: "Typed Domain Context",
+            type: "Domain Context Text",
+          });
+        setMaterialsForDisplay(currentLoadedFilesInfo);
+
+        resetGame(responseData.concepts, validatedScenarios);
       }
     } catch (error) {
       console.error("Error processing materials:", error);
       setUploadStatus("Error processing materials. Please try again.");
       setShowFeedback({
         type: "error",
-        message: `Failed to load game data: ${error.message}.`,
+        message: `Failed to load game data: ${error.message}. Check console for details.`,
       });
       setTimeout(() => setShowFeedback(null), 5000);
       resetGame();
@@ -446,28 +555,27 @@ export default function REQSIM() {
     }
   };
 
-  const handleMaterialDrop = (e) => {
+  // Drag and Drop Handlers for MAIN material dropzone
+  const handleMainMaterialDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     const files = Array.from(e.dataTransfer.files);
-    processFiles(files);
+    if (files.length > 0) {
+      setMainMaterialFile(files[0]);
+      setMainMaterialUploadStatus(`Dropped: ${files[0].name}`);
+    }
     e.currentTarget.classList.remove(
       "ring-2",
       "ring-blue-500",
       "bg-gray-700/50"
     );
   };
-  const handleFileInputChange = (e) => {
-    const files = Array.from(e.target.files);
-    processFiles(files);
-    e.target.value = null;
-  };
-  const handleDragOver = (e) => {
+  const handleMainDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.classList.add("ring-2", "ring-blue-500", "bg-gray-700/50");
   };
-  const handleDragLeave = (e) => {
+  const handleMainDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.classList.remove(
@@ -476,6 +584,38 @@ export default function REQSIM() {
       "bg-gray-700/50"
     );
   };
+
+  // Drag and Drop Handlers for DOMAIN CONTEXT file dropzone
+  const handleDomainContextFileDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      setDomainContextFile(files[0]);
+      setDomainContextText("");
+      setDomainContextFileStatus(`Context File Dropped: ${files[0].name}`);
+    }
+    e.currentTarget.classList.remove(
+      "ring-2",
+      "ring-sky-500",
+      "bg-gray-700/50"
+    );
+  };
+  const handleDomainContextDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add("ring-2", "ring-sky-500", "bg-gray-700/50");
+  };
+  const handleDomainContextDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove(
+      "ring-2",
+      "ring-sky-500",
+      "bg-gray-700/50"
+    );
+  };
+
   const handleScenarioDragStart = (e, scenario) => {
     e.dataTransfer.setData("application/json", JSON.stringify(scenario));
     setIsDragging(true);
@@ -511,11 +651,13 @@ export default function REQSIM() {
       );
       setResolvedConceptsForCurrentScenario(newResolvedParts);
 
-      const pointsForThisPart =
+      const pointsPerPart = Math.max(
+        5,
         Math.round(
           (10 * scenarioToMatch.difficulty) / (conceptIdsArray.length || 1)
-        ) || 5;
-      setScore((s) => s + pointsForThisPart);
+        )
+      );
+      setScore((s) => s + pointsPerPart);
 
       setConcepts((prev) =>
         prev.map((c) =>
@@ -530,13 +672,15 @@ export default function REQSIM() {
           return newStreak;
         });
         setCorrectMatches((prev) => prev + 1);
+        const totalPointsForScenario = pointsPerPart * conceptIdsArray.length;
+
         setShowFeedback({
           type: "success",
           message: `Scenario complete! All ${
             conceptIdsArray.length
-          } concepts found. Total +${
-            pointsForThisPart * conceptIdsArray.length
-          } pts. ${streakCount + 1 > 1 ? `Streak: ${streakCount + 1}` : ""}`,
+          } concepts found. Total +${totalPointsForScenario} pts. ${
+            streakCount + 1 > 1 ? `Streak: ${streakCount + 1}` : ""
+          }`,
         });
         setNpcMood(0);
 
@@ -565,7 +709,7 @@ export default function REQSIM() {
       } else {
         setShowFeedback({
           type: "success",
-          message: `Concept '${targetConcept.name}' found! +${pointsForThisPart} pts. (${newResolvedParts.size}/${conceptIdsArray.length})`,
+          message: `Concept '${targetConcept.name}' found! +${pointsPerPart} pts. (${newResolvedParts.size}/${conceptIdsArray.length})`,
         });
         setNpcMood(1);
       }
@@ -617,8 +761,6 @@ export default function REQSIM() {
         resolvedConceptsForCurrentScenario.size !== conceptIdsArray.length
       )
     ) {
-      // Clear hint only if scenario is fully resolved or an error occurred, or re-dropped on resolved part
-      // Keep hint if it's a correct partial find and more parts are needed.
       setHint("");
     }
 
@@ -645,7 +787,9 @@ export default function REQSIM() {
     if (!currentScenario) return;
     const conceptIdsArray = Array.isArray(currentScenario.conceptIds)
       ? currentScenario.conceptIds
-      : [currentScenario.conceptIds];
+      : currentScenario.conceptIds
+      ? [currentScenario.conceptIds]
+      : [];
     const unresolvedPartsCount =
       conceptIdsArray.length - resolvedConceptsForCurrentScenario.size;
     const penalty = 5 * (unresolvedPartsCount > 0 ? unresolvedPartsCount : 1);
@@ -668,7 +812,7 @@ export default function REQSIM() {
   };
 
   const getNpcHint = async () => {
-    if (!currentScenario || isLoadingHint || isCrossDomain) return; // Prevent hint in cross-domain
+    if (!currentScenario || isLoadingHint || isCrossDomain) return;
 
     setIsLoadingHint(true);
     const hintPenalty = 10;
@@ -710,6 +854,7 @@ export default function REQSIM() {
     } catch (error) {
       console.error("Error fetching NPC hint:", error);
       setHint("Sorry, I'm a bit stumped right now! Try your best.");
+      setShowFeedback(null);
     } finally {
       setIsLoadingHint(false);
     }
@@ -750,14 +895,56 @@ export default function REQSIM() {
       </div>
       <button
         className="mt-3 px-5 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition text-base shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
-        onClick={() => resetGame(concepts, scenarios)}
+        onClick={() => {
+          // Reset game progress but keep the currently loaded concepts and scenarios
+          const currentConceptsCopy = JSON.parse(
+            JSON.stringify(
+              concepts.map((c) => ({ ...c, scenarios: [], emotion: "neutral" }))
+            )
+          ); // Reset matched scenarios on concept cards
+          const currentScenariosCopy = JSON.parse(JSON.stringify(scenarios)); // Use the current list of available scenarios
+
+          // To replay ALL generated scenarios, we might need to reconstruct the original full list
+          // This is a simplified replay that restarts with remaining scenarios.
+          // A more robust replay would involve re-using the originally generated list.
+          const originalGeneratedScenarios = concepts.reduce((acc, concept) => {
+            (concept.scenarios || []).forEach((sc) => {
+              // Ensure concept.scenarios exists
+              if (!acc.find((s) => s.id === sc.id)) {
+                acc.push(sc);
+              }
+            });
+            return acc;
+          }, []);
+
+          // Add back any scenarios that were in the initial list but not yet assigned to concepts
+          const allPossibleScenarios = new Map();
+          originalGeneratedScenarios.forEach((s) =>
+            allPossibleScenarios.set(s.id, s)
+          );
+          scenarios.forEach((s) => {
+            // Add scenarios from the depleted list if not already there
+            if (!allPossibleScenarios.has(s.id))
+              allPossibleScenarios.set(s.id, s);
+          });
+
+          resetGame(
+            currentConceptsCopy,
+            Array.from(allPossibleScenarios.values())
+          );
+        }}
       >
-        Play Again With Same Content
+        Replay This Content
       </button>
       <button
         className="mt-3 ml-3 px-5 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition text-base shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
         onClick={() => {
           setGameInitialized(false);
+          setMainMaterialFile(null);
+          setMainMaterialUploadStatus("Click to select main material file...");
+          setDomainContextFile(null);
+          setDomainContextText("");
+          setDomainContextFileStatus("Upload domain context file (optional)");
           resetGame();
         }}
       >
@@ -875,107 +1062,192 @@ export default function REQSIM() {
         )}
 
         <div className="lg:col-span-1 space-y-4">
-          {/* Mode Selection and Material Upload - Combined and shown if game not initialized */}
-          {!gameInitialized && !isLoadingMaterials && (
-            <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md">
-              <h2 className="text-lg font-semibold mb-3 text-center text-indigo-300">
-                Welcome to REQSIM!
-              </h2>
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Select Game Mode:
-                </label>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => setGameMode("single")}
-                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
-                      gameMode === "single"
-                        ? "bg-indigo-500 text-white ring-2 ring-indigo-300"
-                        : "bg-gray-700 hover:bg-gray-600"
-                    }`}
-                  >
-                    Single Player
-                  </button>
-                  <button
-                    onClick={() => setGameMode("multiplayer")}
-                    className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
-                      gameMode === "multiplayer"
-                        ? "bg-teal-500 text-white ring-2 ring-teal-300"
-                        : "bg-gray-700 hover:bg-gray-600"
-                    }`}
-                  >
-                    Group Mode
-                  </button>
-                </div>
-              </div>
-              {gameMode === "multiplayer" && (
-                <div className="mb-3">
+          {/* Setup Panel - Shown when game not initialized OR when actively loading materials */}
+          {(!gameInitialized || isLoadingMaterials) && (
+            <div className="space-y-4">
+              {" "}
+              {/* Wrapper for the two setup boxes */}
+              <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md space-y-3">
+                <h2 className="text-md font-semibold text-center text-indigo-300 border-b border-gray-700 pb-2">
+                  1. Game & Main Content Setup
+                </h2>
+                {!isLoadingMaterials && (
+                  <div className="mb-2">
+                    <label className="block text-xs font-medium text-gray-300 mb-1">
+                      Game Mode:
+                    </label>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setGameMode("single")}
+                        className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                          gameMode === "single"
+                            ? "bg-indigo-500 text-white ring-1 ring-indigo-300"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        Single Player
+                      </button>
+                      <button
+                        onClick={() => setGameMode("multiplayer")}
+                        className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                          gameMode === "multiplayer"
+                            ? "bg-teal-500 text-white ring-1 ring-teal-300"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        Group Mode
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {gameMode === "multiplayer" && !isLoadingMaterials && (
+                  <div className="mb-2">
+                    <label
+                      htmlFor="groupNameInput"
+                      className="block text-xs font-medium text-gray-300 mb-1"
+                    >
+                      Group/Session Name:
+                    </label>
+                    <input
+                      type="text"
+                      id="groupNameInput"
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 text-gray-200 text-xs rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="e.g., CS401_GroupAlpha"
+                    />
+                  </div>
+                )}
+                <div className="pt-2">
                   <label
-                    htmlFor="groupNameInput"
+                    htmlFor="mainMaterialInputButton"
                     className="block text-xs font-medium text-gray-300 mb-1"
                   >
-                    Group/Session Name (Optional):
+                    {isCrossDomain
+                      ? "Primary Content (Optional if Domain Context provided)"
+                      : "Upload Main Course Material *"}
                   </label>
-                  <input
-                    type="text"
-                    id="groupNameInput"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 text-gray-200 text-xs rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="e.g., CS401_GroupA"
-                  />
-                </div>
-              )}
-              <div className="mt-3">
-                {" "}
-                {/* Moved checkbox here */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="crossDomainCheckbox"
-                    checked={isCrossDomain}
-                    onChange={(e) => setIsCrossDomain(e.target.checked)}
-                    className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-600 bg-gray-700"
-                  />
-                  <label
-                    htmlFor="crossDomainCheckbox"
-                    className="ml-2 text-xs text-gray-300 select-none"
+                  <div
+                    className={`p-3 bg-gray-700/40 rounded-md border border-dashed border-blue-500/70 transition-all ${
+                      isLoadingMaterials
+                        ? "opacity-50"
+                        : "hover:border-blue-400 cursor-pointer"
+                    }`}
+                    onClick={() =>
+                      !isLoadingMaterials &&
+                      mainMaterialInputRef.current?.click()
+                    }
+                    onDrop={handleMainMaterialDrop}
+                    onDragOver={handleMainDragOver}
+                    onDragLeave={handleMainDragLeave}
                   >
-                    Use Cross-Domain Content (Non-RE Specific)
-                  </label>
+                    <input
+                      type="file"
+                      ref={mainMaterialInputRef}
+                      onChange={handleMainMaterialFileChange}
+                      className="hidden"
+                      disabled={isLoadingMaterials}
+                      accept=".txt,.pdf,.pptx,.ppt"
+                    />
+                    <div className="flex items-center text-xs text-blue-300">
+                      <IconFolder />
+                      <span className="truncate flex-1 ml-1.5">
+                        {mainMaterialFile
+                          ? `Selected: ${mainMaterialFile.name}`
+                          : "Drop or Click to Select Main File"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          <div
-            className={`bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg border border-dashed border-blue-500/70 shadow-md transition-all ${
-              isLoadingMaterials
-                ? "cursor-default opacity-70"
-                : "cursor-pointer hover:border-blue-400"
-            }`}
-            onClick={() => !isLoadingMaterials && fileInputRef.current?.click()}
-            onDrop={handleMaterialDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileInputChange}
-              multiple={false}
-              className="hidden"
-              disabled={isLoadingMaterials}
-              accept=".txt,.pdf,.pptx,.ppt"
-            />
-            <h2 className="text-lg font-semibold mb-2 flex items-center text-blue-300">
-              <IconFolder /> Course Materials
-            </h2>
-            <div className="min-h-[60px] p-3 bg-gray-700/40 rounded-md flex flex-col items-center justify-center transition-all">
-              {isLoadingMaterials ? (
-                <div className="flex flex-col items-center">
+              <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md space-y-3">
+                <h2 className="text-md font-semibold text-center text-sky-300 border-b border-gray-700 pb-2">
+                  2. Scenario Customization
+                </h2>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">
+                    Domain-Specific Context (Optional):
+                  </label>
+                  <textarea
+                    value={domainContextText}
+                    onChange={(e) => {
+                      setDomainContextText(e.target.value);
+                      if (domainContextFile) {
+                        setDomainContextFile(null);
+                        setDomainContextFileStatus(
+                          "Upload domain context file (optional)"
+                        );
+                      }
+                    }}
+                    disabled={isLoadingMaterials}
+                    placeholder="Type domain details (e.g., healthcare project specifics)..."
+                    className="w-full h-20 bg-gray-700/40 border border-gray-600/50 text-gray-200 text-xs rounded-md p-2 focus:ring-sky-500 focus:border-sky-500 resize-none mb-1"
+                  />
+                  <div
+                    className={`p-3 bg-gray-700/40 rounded-md border border-dashed border-sky-500/70 transition-all ${
+                      isLoadingMaterials
+                        ? "opacity-50"
+                        : "hover:border-sky-400 cursor-pointer"
+                    }`}
+                    onClick={() =>
+                      !isLoadingMaterials &&
+                      domainContextFileInputRef.current?.click()
+                    }
+                    onDrop={handleDomainContextFileDrop}
+                    onDragOver={handleDomainContextDragOver}
+                    onDragLeave={handleDomainContextDragLeave}
+                  >
+                    <input
+                      type="file"
+                      ref={domainContextFileInputRef}
+                      onChange={handleDomainContextFileChange}
+                      className="hidden"
+                      disabled={isLoadingMaterials}
+                      accept=".txt,.pdf,.pptx,.ppt"
+                    />
+                    <div className="flex items-center text-xs text-sky-300">
+                      <IconFolder />
+                      <span className="truncate flex-1 ml-1.5">
+                        {domainContextFile
+                          ? `Context File: ${domainContextFile.name}`
+                          : domainContextFileStatus}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-2">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="crossDomainCheckboxCombined"
+                      checked={isCrossDomain}
+                      onChange={(e) => setIsCrossDomain(e.target.checked)}
+                      className="h-3.5 w-3.5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-600 bg-gray-700"
+                      disabled={isLoadingMaterials}
+                    />
+                    <label
+                      htmlFor="crossDomainCheckboxCombined"
+                      className="ml-2 text-xs text-gray-300 select-none"
+                    >
+                      General / Cross-Domain Content (Non-RE)
+                    </label>
+                  </div>
+                </div>
+              </div>
+              {/* Button to trigger generation */}
+              <button
+                onClick={triggerContentGeneration}
+                disabled={
+                  isLoadingMaterials ||
+                  (!mainMaterialFile &&
+                    !domainContextText.trim() &&
+                    !domainContextFile)
+                }
+                className="w-full mt-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white font-semibold p-2.5 rounded-md transition-colors flex items-center justify-center shadow hover:shadow-md"
+              >
+                {isLoadingMaterials ? (
                   <svg
-                    className="animate-spin h-5 w-5 text-blue-300 mb-1"
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -994,35 +1266,55 @@ export default function REQSIM() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <p className="text-blue-300 text-center text-xs">
-                    {uploadStatus}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-blue-300 text-center text-xs">
+                ) : (
+                  <IconPlusCircle />
+                )}
+                {isLoadingMaterials ? "Processing..." : "Generate Game Content"}
+              </button>
+              {isLoadingMaterials && (
+                <p className="text-xs text-center text-blue-300 mt-2">
                   {uploadStatus}
                 </p>
               )}
             </div>
-            {materials.length > 0 && !isLoadingMaterials && (
-              <div className="mt-2 space-y-1.5">
-                <h3 className="text-xs font-medium text-gray-400">Loaded:</h3>
-                {materials.map((file, i) => (
+          )}
+
+          {gameInitialized &&
+            !isLoadingMaterials &&
+            materialsForDisplay.length > 0 && (
+              <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md">
+                <h3 className="text-sm font-semibold mb-1 text-blue-300 flex items-center">
+                  <IconBeaker /> Active Content Drivers
+                </h3>
+                {materialsForDisplay.map((fileInfo, i) => (
                   <div
                     key={i}
-                    className="truncate px-2 py-1.5 bg-gray-700/60 rounded-md flex items-center text-xs shadow-sm"
+                    className="truncate px-2 py-1.5 bg-gray-700/60 rounded-md flex items-center text-xs shadow-sm mt-1"
                   >
                     <IconDocument />
-                    <span className="ml-1 flex-grow truncate" title={file.name}>
-                      {file.name}
+                    <span
+                      className="ml-1.5 flex-grow truncate"
+                      title={fileInfo.name}
+                    >
+                      {fileInfo.name}{" "}
+                      <span className="text-gray-400">({fileInfo.type})</span>
                     </span>
                   </div>
                 ))}
+                <div className="mt-2 text-xs text-gray-400">
+                  Content Focus:{" "}
+                  {isCrossDomain ? "Cross-Domain" : "Requirements Engineering"}
+                </div>
+                <div className="mt-1 text-xs text-gray-400">
+                  Game Mode:{" "}
+                  {gameMode === "multiplayer"
+                    ? `Group (${groupName || "Unnamed"})`
+                    : "Single Player"}
+                </div>
               </div>
             )}
-          </div>
 
-          {gameInitialized ? (
+          {gameInitialized && concepts.length > 0 ? (
             <>
               <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg border border-indigo-500/70 shadow-md">
                 <h2 className="text-lg font-semibold mb-2 flex items-center text-indigo-300">
@@ -1195,11 +1487,11 @@ export default function REQSIM() {
               )}
             </>
           ) : (
-            !isLoadingMaterials && ( // Only show this specific message if not loading and not initialized
+            !isLoadingMaterials && (
               <div className="lg:col-span-4 flex items-center justify-center min-h-[400px] bg-gray-800/50 rounded-lg p-6">
                 <p className="text-xl text-center text-gray-400">
-                  Please upload course materials using the panel on the left to
-                  start your REQSIM challenge!
+                  Please set up the game using the panel on the left and click
+                  "Generate Game Content" to start REQSIM!
                 </p>
               </div>
             )
@@ -1271,9 +1563,9 @@ export default function REQSIM() {
             ))}
           </div>
         ) : gameInitialized && concepts.length === 0 && !isLoadingMaterials ? (
-          <div className="lg:col-span-3 flex items-center justify-center min-h-[400px] bg-gray-800/50 rounded-lg p-6">
+          <div className="lg:col-span-3 flex items-center justify-center min-h-[400px]">
             <p className="text-xl text-gray-500 text-center">
-              No concepts or scenarios were generated from the material. <br />{" "}
+              No concepts or scenarios were generated. <br />
               Please try a different file or adjust its content.
             </p>
           </div>
