@@ -1,281 +1,33 @@
 // src/REQSIM.js
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import EmotionFace from "./EmotionFace";
 import CountdownTimer from "./CountdownTimer";
 
-// --- SVG Icons (Keep all your icon definitions as they are) ---
-const IconAcademicCap = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-6 h-6 mr-2 text-indigo-400"
-  >
-    {" "}
-    <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375z" />{" "}
-    <path
-      fillRule="evenodd"
-      d="M3.087 9l.54 9.176A3 3 0 006.62 21h10.757a3 3 0 002.995-2.824L20.913 9H3.087zm6.163 3.75A.75.75 0 0110 12h4a.75.75 0 010 1.5h-4a.75.75 0 01-.75-.75z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconStar = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-4 h-4 mr-1 text-yellow-400"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconExclamationTriangle = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-4 h-4 mr-1 text-red-400"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.519 13.007a3 3 0 01-2.598 4.5H4.48a3 3 0 01-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconFire = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-4 h-4 mr-1 text-orange-400"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M12.963 2.286a.75.75 0 00-1.071 1.05l.002.002A17.106 17.106 0 0112 12c0 .206.01.41.029.613l-.001.002a.75.75 0 00.55.696l.002.001a17.604 17.604 0 003.635 1.352l.003.001.004.001a1.5 1.5 0 01.752 2.159.75.75 0 00.38.262c.018.005.036.009.054.013l.002.001a7.53 7.53 0 012.345 1.075.75.75 0 001.002-.21l.002-.002a1.13 1.13 0 011.437-1.612.75.75 0 00.429-1.019l-.001-.004a13.403 13.403 0 00-2.353-4.656l-.003-.003a.75.75 0 00-.656-.36l-.004-.001a1.503 1.503 0 01-1.076-.673.75.75 0 00-.64-.403h-.002q-.003 0-.005.001a6.68 6.68 0 00-1.973-.318l-.002-.002A13.23 13.23 0 0112 3.75c0-.53.045-1.05.132-1.561l.002-.003zM9.75 12c0-.032.002-.063.005-.094A12.923 12.923 0 0012 11.25c.282 0 .56.018.836.053l.001.001.003.001.004.001a.75.75 0 00.68-.535l.002-.002A11.4 11.4 0 0015 9a.75.75 0 00-1.5 0c0 .075-.004.149-.01.222l.002-.002a.75.75 0 00.012 1.273l-.001.002a11.435 11.435 0 00-2.992 1.254l-.003.001a.75.75 0 00-.271 1.017l.002.003a7.433 7.433 0 01.789 4.057.75.75 0 00.659.737l.003.001a7.5 7.5 0 004.422-.323.75.75 0 00.536-.835l-.001-.002a1.506 1.506 0 01.814-1.645.75.75 0 00.378-.818l-.001-.003a5.92 5.92 0 00-1.034-3.213.75.75 0 00-.848-.413A17.683 17.683 0 0112 15.75c-1.598 0-3.137-.205-4.566-.587a.75.75 0 01-.519-.868l.002-.004a18.45 18.45 0 002.823-6.667.75.75 0 00-.608-.86l-.002-.001a13.021 13.021 0 00-2.426-1.043.75.75 0 00-.51.066L6 6.375a.75.75 0 00-.375.65V12c0 .414.336.75.75.75h3.375z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconFolder = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="h-5 w-5 mr-1.5 text-blue-400"
-  >
-    {" "}
-    <path d="M19.5 21a3 3 0 003-3v-4.5a3 3 0 00-3-3h-15a3 3 0 00-3 3V18a3 3 0 003 3h15zM1.5 9.75A3 3 0 014.5 6.75h4.636a1.5 1.5 0 011.214.61L11.79 9h7.71a3 3 0 013 3v1.5a.75.75 0 01-1.5 0V12a1.5 1.5 0 00-1.5-1.5h-7.928a1.5 1.5 0 01-1.214-.61L8.202 7.5H4.5a1.5 1.5 0 00-1.5 1.5V18a1.5 1.5 0 001.5 1.5h15a1.5 1.5 0 001.5-1.5v-4.5a.75.75 0 011.5 0V18a3 3 0 01-3 3h-15a3 3 0 01-3-3V9.75z" />{" "}
-  </svg>
-);
-const IconDocument = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="h-4 w-4 mr-1.5 text-blue-300 flex-shrink-0"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z"
-      clipRule="evenodd"
-    />{" "}
-    <path d="M12.971 1.816A5.23 5.23 0 0114.25 1.5c.463 0 .907.067 1.312.191l.006.002a6.71 6.71 0 001.414 5.44V9A1.5 1.5 0 0015.5 7.5h-1.875a3.375 3.375 0 01-3.375-3.375V2.25l-.009-.009a6.75 6.75 0 00-1.993-2.018.75.75 0 00-1.01.048Z" />{" "}
-  </svg>
-);
-const IconClipboardList = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="h-5 w-5 mr-1.5 text-blue-400"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M10.5 3A2.5 2.5 0 008 5.5V6h8V5.5A2.5 2.5 0 0013.5 3h-3zm-2.5 9a.75.75 0 000 1.5h7.5a.75.75 0 000-1.5h-7.5zm.75 2.25a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75z"
-      clipRule="evenodd"
-    />{" "}
-    <path d="M4.5 6.75A.75.75 0 005.25 6H6v-.5A3.5 3.5 0 019.5 2h5A3.5 3.5 0 0118 5.5V6h.75a.75.75 0 00.75-.75V5.25a3 3 0 00-3-3h-1.5a.75.75 0 00-.75.75V3A1.5 1.5 0 0013.5 1.5h-3A1.5 1.5 0 009 3v.75a.75.75 0 00-.75.75V6H3.75A.75.75 0 003 6.75v11.5a3 3 0 003 3h12a3 3 0 003-3V6.75a.75.75 0 00-.75-.75H18v3.75a.75.75 0 01-1.5 0V6.75H6v12a1.5 1.5 0 001.5 1.5h9a1.5 1.5 0 001.5-1.5V6.75H6V6.75z" />{" "}
-  </svg>
-);
-const IconDragHandle = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    className="w-4 h-4 text-gray-500 mr-1.5 opacity-60 flex-shrink-0"
-  >
-    {" "}
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M4 6h16M4 12h16M4 18h16"
-    />{" "}
-  </svg>
-);
-const IconUserCircle = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-5 h-5 mr-2 text-green-400"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconLightBulb = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="h-5 w-5 mr-1.5"
-  >
-    {" "}
-    <path d="M12 2.25a.75.75 0 01.75.75v2.033A3.004 3.004 0 0115.75 8c0 .749-.22 1.436-.607 2.007a.75.75 0 01-1.22-.7C13.94 8.802 14.25 8.41 14.25 8a1.5 1.5 0 00-3 0c0 .41.31.702.327.707a.75.75 0 01-1.22.701A3.002 3.002 0 019.75 8c0-1.03.538-1.94.1332-2.542V3a.75.75 0 01.75-.75zM8.25 9.75A2.25 2.25 0 006 12v3A2.25 2.25 0 008.25 17.25h7.5A2.25 2.25 0 0018 15v-3A2.25 2.25 0 0015.75 9.75h-7.5zM12 21a.75.75 0 01-.75-.75v-1.5a.75.75 0 011.5 0v1.5A.75.75 0 0112 21z" />{" "}
-  </svg>
-);
-const IconInformationCircle = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-5 h-5 mr-2 flex-shrink-0"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.04-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconCheckCircle = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-5 h-5 mr-2"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.06-1.06l-3.103 3.104-1.497-1.497a.75.75 0 00-1.06 1.06l2.027 2.027a.75.75 0 001.06 0l3.64-3.64z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconXCircle = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-5 h-5 mr-2"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm10.28-2.56a.75.75 0 00-1.06 1.06L12.94 12l-1.47 1.47a.75.75 0 101.06 1.06L14.47 12l1.47-1.47a.75.75 0 00-1.06-1.06L12 12.94l-1.47-1.47z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconTrophy = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="h-14 w-14 mx-auto text-yellow-400 mb-3"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M3.75 3.75A.75.75 0 003 4.5v15A.75.75 0 003.75 21h16.5a.75.75 0 00.75-.75V13.643c0-.421-.174-.832-.485-1.133L15.864 8.24a.75.75 0 00-1.06 0l-1.015 1.015a.75.75 0 01-1.06 0l-1.126-1.125a3 3 0 00-4.242 0L3.08 12.388a.75.75 0 01-1.06-1.061l4.287-4.287a4.5 4.5 0 016.364 0l1.125 1.125a.75.75 0 001.06 0l1.015-1.015a.75.75 0 011.06 0l4.636 4.636a1.5 1.5 0 01.485 1.133V19.5A.75.75 0 0021 18.75v-7.683a.75.75 0 00-.22-.53L16.03 5.79a4.5 4.5 0 00-6.363 0L7.91 7.547a.75.75 0 01-1.06-1.06L11.137 2.2a3 3 0 014.242 0l4.091 4.09a3 3 0 01.83 2.122V19.5a1.5 1.5 0 01-1.5 1.5H3.75A1.5 1.5 0 012.25 19.5v-15A1.5 1.5 0 013.75 2.25h2.733a.75.75 0 000-1.5H3.75zM9 8.25a.75.75 0 000 1.5h6a.75.75 0 000-1.5H9z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconPlusCircle = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-5 h-5 mr-1.5 text-sky-400"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75 9.75S17.385 2.25 12 2.25zM12.75 9a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25V15a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25V9z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconBeaker = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className="w-5 h-5 mr-1.5 text-teal-400"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M10.494 2.278c-.831-1.111-2.683-1.111-3.514 0C6.393 3.054 6 3.932 6 4.846v5.504a2.626 2.626 0 00.388 1.346l2.08 3.121A2.626 2.626 0 0010.5 15.75h3a2.625 2.625 0 002.032-.928l2.08-3.121a2.626 2.626 0 00.388-1.346V4.846c0-.913-.393-1.792-.98-2.567zM9.313 8.176a.75.75 0 011.06-1.06l1.048 1.048 1.048-1.048a.75.75 0 111.06 1.06L12.53 9.237l1.048 1.048a.75.75 0 11-1.06 1.06L11.47 10.297l-1.048 1.048a.75.75 0 01-1.06-1.06L10.413 9.237l-1.047-1.048a.75.75 0 01-.053-.013z"
-      clipRule="evenodd"
-    />{" "}
-    <path d="M6 19.5a2.25 2.25 0 012.25-2.25h7.5a2.25 2.25 0 012.25 2.25V21a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75v-1.5z" />{" "}
-  </svg>
-);
-const IconDownload = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    className="w-4 h-4 mr-1.5"
-  >
-    {" "}
-    <path
-      fillRule="evenodd"
-      d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v4.59L7.3 9.72a.75.75 0 00-1.06 1.06l2.75 2.75a.75.75 0 001.06 0l2.75-2.75a.75.75 0 10-1.06-1.06L10.75 11.34V6.75z"
-      clipRule="evenodd"
-    />{" "}
-  </svg>
-);
-const IconXMark = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    className="w-5 h-5"
-  >
-    {" "}
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6 18L18 6M6 6l12 12"
-    />{" "}
-  </svg>
-);
-// --- End SVG Icons ---
+// NEW: import all icons from our icons.js
+import {
+  IconAcademicCap,
+  IconStar,
+  IconExclamationTriangle,
+  IconFire,
+  IconFolder,
+  IconDocument,
+  IconClipboardList,
+  IconDragHandle,
+  IconUserCircle,
+  IconLightBulb,
+  IconInformationCircle,
+  IconCheckCircle,
+  IconXCircle,
+  IconTrophy,
+  IconPlusCircle,
+  IconBeaker,
+  IconDownload,
+  IconXMark,
+  IconClipboardDocumentList,
+  IconChevronRight,
+  IconChevronLeft,
+} from "./icons";
 
 const BACKEND_URL =
   process.env.REACT_APP_BACKEND_URL ||
@@ -337,6 +89,35 @@ export default function REQSIM() {
   const [gameInteractionsLog, setGameInteractionsLog] = useState([]);
   const [dragStartTime, setDragStartTime] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showSurveyModal, setShowSurveyModal] = useState(false);
+  const [surveyStep, setSurveyStep] = useState(1);
+  const [isSubmittingSurvey, setIsSubmittingSurvey] = useState(false);
+  const [surveySkippedOrCompleted, setSurveySkippedOrCompleted] =
+    useState(false);
+  const [surveyData, setSurveyData] = useState({
+    email: "",
+    age: "",
+    gender: "",
+    education: "",
+    reFamiliarity: "",
+    reConceptUnderstand_1: "",
+    reScenarioClarity: "",
+    reGameplayEngagement: "",
+    rePrinciplesImprovement: "",
+    reConceptRequests: "",
+    reOtherFeedback: "",
+    generalGameplayEngagement: "",
+    interfaceUserFriendliness: "",
+    instructionsClear: "",
+    technicalIssues: "",
+    recommendLikelihood: "",
+    likedMost: "",
+    couldBeImproved: "",
+    otherComments: "",
+  });
+
+  const THESIS_TITLE =
+    "Developing AI-Driven Simulation Game for Enhanced Learning in Requirements Engineering";
 
   useEffect(() => {
     if (streakCount > maxStreak) {
@@ -381,7 +162,6 @@ export default function REQSIM() {
       };
       setCurrentScenario(nextScenario);
       setResolvedConceptsForCurrentScenario(new Set());
-      // Avoid logging SCENARIO_PRESENTED if it's just the resetGame call with empty list
       if (nextScenario.id !== undefined) {
         logInteraction("SCENARIO_PRESENTED", {
           scenarioId: nextScenario.id,
@@ -391,10 +171,22 @@ export default function REQSIM() {
       }
     } else {
       setCurrentScenario(null);
-      if (gameInitialized && concepts.length > 0) {
-        // Check if game was actually played through
-        logInteraction("GAME_COMPLETED_ALL_SCENARIOS");
-        setShowReportModal(true); // Show report modal when game ends
+      if (
+        gameInitialized &&
+        concepts.length > 0 &&
+        !surveySkippedOrCompleted &&
+        !showSurveyModal
+      ) {
+        logInteraction("GAME_COMPLETED_ALL_SCENARIOS_PENDING_SURVEY");
+        setShowSurveyModal(true);
+      } else if (
+        gameInitialized &&
+        concepts.length > 0 &&
+        surveySkippedOrCompleted &&
+        !showReportModal
+      ) {
+        logInteraction("GAME_COMPLETED_ALL_SCENARIOS_SURVEY_DONE");
+        setShowReportModal(true);
       }
     }
   };
@@ -421,6 +213,30 @@ export default function REQSIM() {
     setShowFeedback(null);
     setGameInteractionsLog([]);
     setShowReportModal(false);
+    setShowSurveyModal(false);
+    setSurveySkippedOrCompleted(false);
+    setSurveyStep(1);
+    setSurveyData({
+      email: "",
+      age: "",
+      gender: "",
+      education: "",
+      reFamiliarity: "",
+      reConceptUnderstand_1: "",
+      reScenarioClarity: "",
+      reGameplayEngagement: "",
+      rePrinciplesImprovement: "",
+      reConceptRequests: "",
+      reOtherFeedback: "",
+      generalGameplayEngagement: "",
+      interfaceUserFriendliness: "",
+      instructionsClear: "",
+      technicalIssues: "",
+      recommendLikelihood: "",
+      likedMost: "",
+      couldBeImproved: "",
+      otherComments: "",
+    });
 
     if (newConcepts.length > 0 && newScenarios.length > 0) {
       setGameInitialized(true);
@@ -601,6 +417,11 @@ export default function REQSIM() {
           conceptsCount: responseData.concepts.length,
           scenariosCount: validatedScenarios.length,
         });
+        setShowFeedback({
+          type: "success",
+          message: "Content generated! Game is ready.",
+        }); // Updated message
+        setTimeout(() => setShowFeedback(null), 3000);
       }
     } catch (error) {
       console.error("Error processing materials:", error);
@@ -693,6 +514,21 @@ export default function REQSIM() {
   };
 
   const handleConceptDrop = (e, targetConcept) => {
+    // ... (Keep existing handleConceptDrop logic, ensure it logs interactions via `logInteraction`)
+    // Make sure the logInteraction call within this function has all necessary details.
+    // For example:
+    // logInteraction("DROP_ATTEMPT", {
+    //     scenarioId: scenarioToMatch.id,
+    //     droppedConceptId: targetConcept.id,
+    //     droppedConceptName: targetConcept.name,
+    //     expectedConceptIdsInScenario: conceptIdsArray,
+    //     isCorrectDrop: isCorrectConceptForScenario && !isAlreadyResolvedForThisScenario,
+    //     isNewPartResolved: isCorrectConceptForScenario && !isAlreadyResolvedForThisScenario,
+    //     latencyMs: latency,
+    //     resolvedPartsBeforeDrop: Array.from(resolvedConceptsForCurrentScenario)
+    // });
+    // And on SCENARIO_FULLY_RESOLVED:
+    // logInteraction("SCENARIO_FULLY_RESOLVED", { scenarioId: scenarioToMatch.id, timeToResolve: dropTime - (currentScenario.startTime || dragStartTime || dropTime) });
     e.preventDefault();
     if (!currentScenario) return;
 
@@ -761,7 +597,7 @@ export default function REQSIM() {
           type: "success",
           message: `Scenario complete! All ${
             conceptIdsArray.length
-          } concepts found. +${totalPointsForScenario} total pts. ${
+          } concepts found. Total +${totalPointsForScenario} pts. ${
             streakCount + 1 > 1 ? `Streak: ${streakCount + 1}` : ""
           }`,
         });
@@ -870,6 +706,7 @@ export default function REQSIM() {
   };
 
   const handleTimeUp = () => {
+    // ... (Keep existing handleTimeUp logic, ensure it calls logInteraction)
     if (!currentScenario) return;
     const conceptIdsArray = Array.isArray(currentScenario.conceptIds)
       ? currentScenario.conceptIds
@@ -893,19 +730,16 @@ export default function REQSIM() {
         (id) => !resolvedConceptsForCurrentScenario.has(id)
       ),
     });
-
     setIndex((i) => i + 1);
-
     const remaining = scenarios.filter((s) => s.id !== currentScenario.id);
     setScenarios(remaining);
     setupNewScenario(remaining);
-
     setTimeout(() => setShowFeedback(null), 3000);
   };
 
   const getNpcHint = async () => {
+    // ... (Keep existing getNpcHint logic, ensure it calls logInteraction)
     if (!currentScenario || isLoadingHint || isCrossDomain) return;
-
     setIsLoadingHint(true);
     const hintPenalty = 10;
     setScore((s) => Math.max(0, s - hintPenalty));
@@ -917,7 +751,6 @@ export default function REQSIM() {
         (id) => !resolvedConceptsForCurrentScenario.has(id)
       ),
     });
-
     try {
       const payload = {
         current_scenario: currentScenario,
@@ -926,13 +759,11 @@ export default function REQSIM() {
         ),
         all_concepts: concepts,
       };
-
       const response = await fetch(`${BACKEND_URL}/api/reqsim/npc-hint`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       if (!response.ok) {
         const errData = await response
           .json()
@@ -981,7 +812,7 @@ export default function REQSIM() {
         concepts.map((c) => ({ ...c, scenarios: [], emotion: "neutral" }))
       )
     );
-    let newInteractionsLog = [...gameInteractionsLog]; // Start with existing logs if any from partial play
+    let newInteractionsLog = [...gameInteractionsLog];
 
     originalGeneratedScenarios.forEach((scenario, scIdx) => {
       const scenarioConceptIds = Array.isArray(scenario.conceptIds)
@@ -1000,7 +831,7 @@ export default function REQSIM() {
         conceptIds: scenario.conceptIds,
         currentScore: tempScore,
         currentErrors: 0,
-        currentStreak: tempStreak, // Use local temp values for log consistency
+        currentStreak: tempStreak,
       });
 
       scenarioConceptIds.forEach((correctConceptId) => {
@@ -1076,7 +907,7 @@ export default function REQSIM() {
     setNpcMood(0);
     setConcepts(updatedConceptsState);
     setScenarios([]);
-    setCurrentScenario(null); // THIS WILL CAUSE setupNewScenario to run
+    setCurrentScenario(null); // This should now reliably trigger the survey/report flow via setupNewScenario
     setIndex(totalScenariosInitialCount);
     setResolvedConceptsForCurrentScenario(new Set());
     setGameInteractionsLog(newInteractionsLog);
@@ -1087,16 +918,488 @@ export default function REQSIM() {
     });
     setTimeout(() => setShowFeedback(null), 2000);
 
-    // Explicitly trigger modal if setCurrentScenario(null) doesn't do it reliably enough via its effect
-    // This ensures the report always shows after auto-complete
-    if (gameInitialized && updatedConceptsState.length > 0) {
-      // Double check conditions
-      logInteraction("AUTO_GAME_COMPLETED_AND_REPORT_SHOWN");
+    // Explicitly show survey modal if game was initialized and had content
+    if (
+      gameInitialized &&
+      updatedConceptsState.length > 0 &&
+      !surveySkippedOrCompleted
+    ) {
+      logInteraction("AUTO_GAME_COMPLETED_PENDING_SURVEY");
+      setShowSurveyModal(true);
+    } else if (
+      gameInitialized &&
+      updatedConceptsState.length > 0 &&
+      surveySkippedOrCompleted
+    ) {
+      logInteraction("AUTO_GAME_COMPLETED_SURVEY_DONE");
       setShowReportModal(true);
     }
   };
 
-  // --- GameReportModal Component ---
+  const handleSurveyChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setSurveyData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSurveySubmit = async () => {
+    setIsSubmittingSurvey(true);
+    logInteraction("SURVEY_SUBMISSION_STARTED", { surveyData });
+
+    const payload = {
+      surveyData,
+      gameStats: {
+        score,
+        errors,
+        maxStreak,
+        correctMatches,
+        totalScenariosInitialCount,
+        gameMode,
+        groupName,
+        isCrossDomain,
+      },
+      gameInteractionsLog,
+      gameContent: {
+        concepts: concepts.map((c) => ({
+          id: c.id,
+          name: c.name,
+          definition: c.definition,
+        })), // Send cleaned concepts
+        originalGeneratedScenarios: originalGeneratedScenarios,
+        isCrossDomain: isCrossDomain,
+        gameMode: gameMode,
+        groupName: groupName,
+        materialsForDisplay: materialsForDisplay,
+      },
+      thesisReference: THESIS_TITLE,
+      submittedAtClient: new Date().toISOString(),
+    };
+
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/reqsim/save-survey-and-game-data`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response
+          .json()
+          .catch(() => ({ error: "Unknown submission error" }));
+        throw new Error(
+          errData.error || `HTTP error! Status: ${response.status}`
+        );
+      }
+
+      const result = await response.json();
+      setShowFeedback({
+        type: "success",
+        message: "Survey submitted successfully! Thank you.",
+      });
+      logInteraction("SURVEY_SUBMISSION_SUCCESS", { backendResponse: result });
+      setSurveySkippedOrCompleted(true);
+      setShowSurveyModal(false);
+      setShowReportModal(true);
+    } catch (error) {
+      console.error("Error submitting survey:", error);
+      setShowFeedback({
+        type: "error",
+        message: `Survey submission failed: ${error.message}. Please try again.`,
+      });
+      logInteraction("SURVEY_SUBMISSION_FAILED", { error: error.message });
+    } finally {
+      setIsSubmittingSurvey(false);
+    }
+  };
+
+  const SurveyModal = () => {
+    // ... (SurveyModal implementation as provided in the previous detailed response)
+    // This includes steps, conditional questions, navigation, and submission.
+    // For brevity, I am not re-pasting the entire SurveyModal JSX here.
+    // Please ensure this component is fully defined as shown in the prior turn.
+    if (!showSurveyModal) return null;
+
+    const totalSurveySteps = 2;
+    const nextSurveyStep = () =>
+      setSurveyStep((s) => Math.min(s + 1, totalSurveySteps));
+    const prevSurveyStep = () => setSurveyStep((s) => Math.max(s - 1, 1));
+
+    const LikertScale = ({ name, question, value, onChange }) => (
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-300 mb-1.5">
+          {question}
+        </label>
+        <div className="flex flex-wrap justify-between items-center space-x-1 text-xs">
+          {[
+            "Strongly Disagree",
+            "Disagree",
+            "Neutral",
+            "Agree",
+            "Strongly Agree",
+          ].map((label, index) => (
+            <label
+              key={index}
+              className="flex flex-col items-center cursor-pointer p-1.5 rounded hover:bg-gray-600/50 transition-colors min-w-[18%] text-center"
+            >
+              <input
+                type="radio"
+                name={name}
+                value={index + 1}
+                checked={String(value) === String(index + 1)}
+                onChange={onChange}
+                className="form-radio h-3.5 w-3.5 text-indigo-500 bg-gray-700 border-gray-600 focus:ring-indigo-400 mb-1"
+              />
+              <span
+                className={
+                  String(value) === String(index + 1)
+                    ? "text-indigo-300 font-medium"
+                    : "text-gray-400"
+                }
+              >
+                {label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4"
+      >
+        <motion.div
+          initial={{ y: -50, opacity: 0, scale: 0.9 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 50, opacity: 0, scale: 0.9 }}
+          className="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative text-gray-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="text-center border-b border-gray-700 pb-3 mb-4">
+            <IconClipboardDocumentList />
+            <h2 className="text-xl font-bold text-blue-300">
+              Post-Game Survey (Step {surveyStep}/{totalSurveySteps})
+            </h2>
+            <p className="text-xs text-gray-400 mt-1">
+              Your feedback is crucial for the research: "{THESIS_TITLE}". All
+              data will be handled confidentially.
+            </p>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (surveyStep === totalSurveySteps) handleSurveySubmit();
+              else nextSurveyStep();
+            }}
+          >
+            {surveyStep === 1 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-3 text-sm"
+              >
+                <h3 className="text-md font-semibold text-indigo-300 mb-2">
+                  About You
+                </h3>
+                <div>
+                  <label
+                    htmlFor="surveyEmail"
+                    className="block text-xs font-medium"
+                  >
+                    Email (Optional - for potential follow-up only):
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    id="surveyEmail"
+                    value={surveyData.email}
+                    onChange={handleSurveyChange}
+                    className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="surveyAge"
+                    className="block text-xs font-medium"
+                  >
+                    Age:
+                  </label>
+                  <input
+                    type="number"
+                    name="age"
+                    id="surveyAge"
+                    value={surveyData.age}
+                    onChange={handleSurveyChange}
+                    className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="surveyGender"
+                    className="block text-xs font-medium"
+                  >
+                    Gender:
+                  </label>
+                  <select
+                    name="gender"
+                    id="surveyGender"
+                    value={surveyData.gender}
+                    onChange={handleSurveyChange}
+                    className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Select...</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="non-binary">Non-binary</option>
+                    <option value="other">Other</option>
+                    <option value="prefer_not_say">Prefer not to say</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="surveyEducation"
+                    className="block text-xs font-medium"
+                  >
+                    Highest Level of Education:
+                  </label>
+                  <select
+                    name="education"
+                    id="surveyEducation"
+                    value={surveyData.education}
+                    onChange={handleSurveyChange}
+                    className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Select...</option>
+                    <option value="high_school">High School</option>
+                    <option value="bachelors">Bachelor's Degree</option>
+                    <option value="masters">Master's Degree</option>
+                    <option value="phd">PhD</option>
+                    <option value="vocational">
+                      Vocational/Technical Training
+                    </option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                {!isCrossDomain && (
+                  <LikertScale
+                    name="reFamiliarity"
+                    question="How familiar are you with Requirements Engineering concepts?"
+                    value={surveyData.reFamiliarity}
+                    onChange={handleSurveyChange}
+                  />
+                )}
+              </motion.div>
+            )}
+
+            {surveyStep === 2 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-3 text-sm"
+              >
+                <h3 className="text-md font-semibold text-indigo-300 mb-2">
+                  Simulation Feedback
+                </h3>
+                {!isCrossDomain ? (
+                  <>
+                    {concepts.slice(0, 1).map((c) => (
+                      <LikertScale
+                        key={c.id}
+                        name={`reConceptUnderstand_${c.id}`}
+                        question={`Did the game help you understand the concept: "${c.name}"?`}
+                        value={surveyData[`reConceptUnderstand_${c.id}`] || ""}
+                        onChange={handleSurveyChange}
+                      />
+                    ))}
+                    <LikertScale
+                      name="reScenarioClarity"
+                      question="The scenarios clearly related to the RE concepts."
+                      value={surveyData.reScenarioClarity}
+                      onChange={handleSurveyChange}
+                    />
+                    <LikertScale
+                      name="reGameplayEngagement"
+                      question="The RE-focused gameplay was engaging."
+                      value={surveyData.reGameplayEngagement}
+                      onChange={handleSurveyChange}
+                    />
+                    <LikertScale
+                      name="rePrinciplesImprovement"
+                      question="The game improved my understanding of RE principles."
+                      value={surveyData.rePrinciplesImprovement}
+                      onChange={handleSurveyChange}
+                    />
+                    <div>
+                      <label className="block text-xs font-medium">
+                        What RE concepts would you like to see more of, or
+                        explained differently?
+                      </label>
+                      <textarea
+                        name="reConceptRequests"
+                        value={surveyData.reConceptRequests}
+                        onChange={handleSurveyChange}
+                        rows="2"
+                        className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                      ></textarea>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium">
+                        Other feedback on the RE learning aspect?
+                      </label>
+                      <textarea
+                        name="reOtherFeedback"
+                        value={surveyData.reOtherFeedback}
+                        onChange={handleSurveyChange}
+                        rows="2"
+                        className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                      ></textarea>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <LikertScale
+                      name="generalGameplayEngagement"
+                      question="The gameplay was engaging."
+                      value={surveyData.generalGameplayEngagement}
+                      onChange={handleSurveyChange}
+                    />
+                    <LikertScale
+                      name="interfaceUserFriendliness"
+                      question="The game interface was user-friendly."
+                      value={surveyData.interfaceUserFriendliness}
+                      onChange={handleSurveyChange}
+                    />
+                    <div>
+                      <label className="block text-xs font-medium">
+                        Were the game instructions clear?
+                      </label>
+                      <select
+                        name="instructionsClear"
+                        value={surveyData.instructionsClear}
+                        onChange={handleSurveyChange}
+                        className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                      >
+                        <option value="">Select...</option>
+                        <option value="yes">Yes, very clear</option>
+                        <option value="mostly">Mostly clear</option>
+                        <option value="partially">Partially clear</option>
+                        <option value="no">Not clear</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+                <div>
+                  <label className="block text-xs font-medium">
+                    Did you encounter any technical issues or bugs? If so,
+                    please describe.
+                  </label>
+                  <textarea
+                    name="technicalIssues"
+                    value={surveyData.technicalIssues}
+                    onChange={handleSurveyChange}
+                    rows="2"
+                    className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                  ></textarea>
+                </div>
+                <LikertScale
+                  name="recommendLikelihood"
+                  question="How likely are you to recommend this simulation for learning?"
+                  value={surveyData.recommendLikelihood}
+                  onChange={handleSurveyChange}
+                />
+                <div>
+                  <label className="block text-xs font-medium">
+                    What did you like most about the simulation?
+                  </label>
+                  <textarea
+                    name="likedMost"
+                    value={surveyData.likedMost}
+                    onChange={handleSurveyChange}
+                    rows="2"
+                    className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                  ></textarea>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium">
+                    What could be improved in the simulation?
+                  </label>
+                  <textarea
+                    name="couldBeImproved"
+                    value={surveyData.couldBeImproved}
+                    onChange={handleSurveyChange}
+                    rows="2"
+                    className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                  ></textarea>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium">
+                    Any other comments or suggestions?
+                  </label>
+                  <textarea
+                    name="otherComments"
+                    value={surveyData.otherComments}
+                    onChange={handleSurveyChange}
+                    rows="2"
+                    className="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-xs focus:ring-indigo-500 focus:border-indigo-500"
+                  ></textarea>
+                </div>
+              </motion.div>
+            )}
+
+            <div className="mt-6 pt-4 border-t border-gray-700 flex justify-between items-center">
+              <button
+                type="button"
+                onClick={prevSurveyStep}
+                disabled={surveyStep === 1 || isSubmittingSurvey}
+                className="px-4 py-2 bg-gray-600 text-white font-semibold rounded-md hover:bg-gray-500 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+              >
+                {" "}
+                <IconChevronLeft /> Previous{" "}
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmittingSurvey}
+                className="px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+              >
+                {isSubmittingSurvey
+                  ? "Submitting..."
+                  : surveyStep === totalSurveySteps
+                  ? "Submit Survey"
+                  : "Next"}
+                {surveyStep < totalSurveySteps && !isSubmittingSurvey && (
+                  <IconChevronRight />
+                )}
+              </button>
+            </div>
+          </form>
+          <button
+            onClick={() => {
+              setShowSurveyModal(false);
+              setSurveySkippedOrCompleted(true);
+              setShowReportModal(true);
+              logInteraction("SURVEY_SKIPPED");
+            }}
+            disabled={isSubmittingSurvey}
+            className="w-full mt-3 text-center text-xs text-gray-400 hover:text-gray-200 underline"
+          >
+            {" "}
+            Skip Survey & View Report{" "}
+          </button>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
+  // GameReportModal (ensure it's defined or imported correctly)
   const GameReportModal = ({
     isOpen,
     onClose,
@@ -1105,8 +1408,8 @@ export default function REQSIM() {
     originalScenarios,
     interactionsLog,
   }) => {
+    // ... (Full GameReportModal JSX and logic from your previous working version)
     if (!isOpen) return null;
-
     const {
       score,
       errors,
@@ -1117,14 +1420,12 @@ export default function REQSIM() {
       groupName,
       isCrossDomain: reportIsCrossDomain,
     } = gameStats;
-
     const dropAttempts = interactionsLog.filter(
       (log) =>
         log.actionType === "DROP_ATTEMPT" ||
         log.actionType === "AUTO_DROP_CORRECT"
     );
     const totalDrops = dropAttempts.length;
-
     const correctNewPartDrops = dropAttempts.filter(
       (log) => log.isCorrectDrop && log.isNewPartResolved
     ).length;
@@ -1138,7 +1439,6 @@ export default function REQSIM() {
       attemptsToResolveNewPart > 0
         ? (correctNewPartDrops / attemptsToResolveNewPart) * 100
         : 0;
-
     const validLatencies = dropAttempts
       .filter(
         (log) =>
@@ -1167,7 +1467,6 @@ export default function REQSIM() {
       const incorrectlyDroppedOn = dropsOnThisConcept.filter(
         (log) => !log.isCorrectDrop
       ).length;
-
       let timesExpected = 0;
       (originalScenarios || []).forEach((s) => {
         const scenarioConceptIds = Array.isArray(s.conceptIds)
@@ -1177,7 +1476,6 @@ export default function REQSIM() {
           : [];
         if (scenarioConceptIds.includes(concept.id)) timesExpected++;
       });
-
       return {
         ...concept,
         correctlyAssociated,
@@ -1200,7 +1498,6 @@ export default function REQSIM() {
       reportContent += `Content Focus: ${
         reportIsCrossDomain ? "Cross-Domain" : "Requirements Engineering"
       }\n\n`;
-
       reportContent += "### Overall Performance:\n";
       reportContent += `----------------------\n`;
       reportContent += `Final Score: ${score}\n`;
@@ -1210,8 +1507,7 @@ export default function REQSIM() {
       reportContent += `Overall Drop Accuracy (on new parts): ${overallDropAccuracy.toFixed(
         1
       )}%\n`;
-      reportContent += `Avg. Correct Decision Time (Manual): ${avgLatency}s\n\n`;
-
+      reportContent += `Avg. Correct Decision Time (Manual Play): ${avgLatency}s\n\n`;
       reportContent += "### Concept Performance:\n";
       reportContent += "---------------------\n";
       conceptPerformance.forEach((stat) => {
@@ -1224,7 +1520,6 @@ export default function REQSIM() {
         )}%\n`;
         reportContent += `  Times Expected in Scenarios: ${stat.timesExpected}\n\n`;
       });
-
       reportContent += "\n### Scenario Breakdown:\n";
       reportContent += "-------------------\n";
       (originalScenarios || []).forEach((scenario) => {
@@ -1242,7 +1537,6 @@ export default function REQSIM() {
         reportContent += `  Expected Concepts: ${
           expectedConceptNames || "N/A"
         }\n`;
-
         const scenarioDropInteractions = interactionsLog.filter(
           (log) =>
             log.scenarioId === scenario.id &&
@@ -1263,7 +1557,6 @@ export default function REQSIM() {
               log.actionType === "AUTO_SCENARIO_RESOLVED") &&
             log.scenarioId === scenario.id
         );
-
         reportContent += `  Player Matched Concepts This Session: ${
           playerMatchedCorrectConceptsForThisScenario.size > 0
             ? Array.from(playerMatchedCorrectConceptsForThisScenario).join(", ")
@@ -1273,7 +1566,6 @@ export default function REQSIM() {
           isFullyResolvedLogged ? "Yes" : "No"
         }\n\n`;
       });
-
       const blob = new Blob([reportContent], {
         type: "text/plain;charset=utf-8;",
       });
@@ -1312,20 +1604,22 @@ export default function REQSIM() {
             onClick={onClose}
             className="absolute top-3 right-4 text-gray-400 hover:text-gray-100 transition-colors p-1 rounded-full hover:bg-gray-700"
           >
-            <IconXMark />
+            {" "}
+            <IconXMark />{" "}
           </button>
           <div className="text-center border-b border-gray-700 pb-3 mb-4">
-            <IconTrophy />
+            {" "}
+            <IconTrophy />{" "}
             <h2 className="text-2xl font-bold text-yellow-400">
               REQSIM Detailed Report
-            </h2>
+            </h2>{" "}
           </div>
-
           <div className="space-y-3 text-sm">
             <div className="bg-gray-700/50 p-3 rounded-md">
+              {" "}
               <h3 className="text-lg font-semibold text-indigo-300 mb-2">
                 Overall Performance
-              </h3>
+              </h3>{" "}
               <p>
                 Game Mode:{" "}
                 <span className="font-semibold">
@@ -1333,102 +1627,112 @@ export default function REQSIM() {
                     ? `Group (${groupName || "Unnamed"})`
                     : "Single Player"}
                 </span>
-              </p>
+              </p>{" "}
               <p>
                 Final Score:{" "}
                 <span className="font-semibold text-green-400">{score}</span>
-              </p>
+              </p>{" "}
               <p>
                 Scenarios Resolved:{" "}
                 <span className="font-semibold">
                   {correctMatches} / {totalScenariosInitialCount} (
                   {overallDropAccuracy.toFixed(1)}% accuracy)
                 </span>
-              </p>
+              </p>{" "}
               <p>
                 Total Incorrect Drops:{" "}
                 <span className="font-semibold text-red-400">{errors}</span>
-              </p>
+              </p>{" "}
               <p>
                 Max Streak:{" "}
                 <span className="font-semibold text-orange-400">
                   {maxStreak}
                 </span>
-              </p>
+              </p>{" "}
               <p>
                 Avg. Correct Decision Time (Manual Play):{" "}
                 <span className="font-semibold">{avgLatency}s</span>
-              </p>
+              </p>{" "}
             </div>
-
             <div className="bg-gray-700/50 p-3 rounded-md">
+              {" "}
               <h3 className="text-lg font-semibold text-indigo-300 mb-2">
                 Content Source
-              </h3>
+              </h3>{" "}
               {materialsForDisplay.map((fileInfo, i) => (
                 <div
                   key={i}
                   className="truncate py-1 flex items-center text-xs"
                 >
-                  <IconDocument />
+                  {" "}
+                  <IconDocument />{" "}
                   <span
                     className="ml-1.5 flex-grow truncate"
                     title={fileInfo.name}
                   >
+                    {" "}
                     {fileInfo.name}{" "}
-                    <span className="text-gray-400">({fileInfo.type})</span>
-                  </span>
+                    <span className="text-gray-400">({fileInfo.type})</span>{" "}
+                  </span>{" "}
                 </div>
-              ))}
+              ))}{" "}
               <p className="mt-1 text-xs">
                 Content Focus:{" "}
                 {reportIsCrossDomain
                   ? "Cross-Domain"
                   : "Requirements Engineering"}
-              </p>
+              </p>{" "}
             </div>
-
             <div>
+              {" "}
               <h3 className="text-lg font-semibold text-indigo-300 mb-2">
                 Concept Performance
-              </h3>
+              </h3>{" "}
               <div className="overflow-x-auto">
+                {" "}
                 <table className="min-w-full text-xs bg-gray-700/30 rounded-md">
+                  {" "}
                   <thead className="bg-gray-700/50">
+                    {" "}
                     <tr>
+                      {" "}
                       <th className="px-3 py-2 text-left font-semibold">
                         Concept
-                      </th>
+                      </th>{" "}
                       <th className="px-3 py-2 text-center font-semibold">
                         Correct Assoc.
-                      </th>
+                      </th>{" "}
                       <th className="px-3 py-2 text-center font-semibold">
                         Incorrect Drops On
-                      </th>
+                      </th>{" "}
                       <th className="px-3 py-2 text-center font-semibold">
                         Times Expected
-                      </th>
+                      </th>{" "}
                       <th className="px-3 py-2 text-center font-semibold">
                         Accuracy on Drops
-                      </th>
-                    </tr>
-                  </thead>
+                      </th>{" "}
+                    </tr>{" "}
+                  </thead>{" "}
                   <tbody>
+                    {" "}
                     {conceptPerformance.map((stat) => (
                       <tr
                         key={stat.id}
                         className="border-t border-gray-700 hover:bg-gray-700/50"
                       >
-                        <td className="px-3 py-1.5 font-medium">{stat.name}</td>
+                        {" "}
+                        <td className="px-3 py-1.5 font-medium">
+                          {stat.name}
+                        </td>{" "}
                         <td className="px-3 py-1.5 text-center text-green-400">
                           {stat.correctlyAssociated}
-                        </td>
+                        </td>{" "}
                         <td className="px-3 py-1.5 text-center text-red-400">
                           {stat.incorrectlyDroppedOn}
-                        </td>
+                        </td>{" "}
                         <td className="px-3 py-1.5 text-center">
                           {stat.timesExpected}
-                        </td>
+                        </td>{" "}
                         <td
                           className={`px-3 py-1.5 text-center font-semibold ${
                             stat.accuracyOnDrops >= 75
@@ -1439,21 +1743,22 @@ export default function REQSIM() {
                           }`}
                         >
                           {stat.accuracyOnDrops.toFixed(0)}%
-                        </td>
+                        </td>{" "}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    ))}{" "}
+                  </tbody>{" "}
+                </table>{" "}
+              </div>{" "}
             </div>
-
             <div className="mt-6 text-center space-x-3">
+              {" "}
               <button
                 onClick={handleDownloadReport}
                 className="px-6 py-2 bg-sky-600 text-white font-semibold rounded-md hover:bg-sky-700 transition text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 inline-flex items-center justify-center"
               >
-                <IconDownload /> Download Report
-              </button>
+                {" "}
+                <IconDownload /> Download Report{" "}
+              </button>{" "}
               <button
                 className="px-5 py-2 bg-purple-600 text-white font-semibold rounded-md hover:bg-purple-700 transition text-base shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
                 onClick={() => {
@@ -1471,11 +1776,12 @@ export default function REQSIM() {
                   resetGame();
                 }}
               >
-                Load New Materials
-              </button>
+                {" "}
+                Load New Materials{" "}
+              </button>{" "}
             </div>
-          </div>
-        </motion.div>
+          </div>{" "}
+        </motion.div>{" "}
       </motion.div>
     );
   };
@@ -1591,14 +1897,17 @@ export default function REQSIM() {
             </p>{" "}
           </motion.div>
         )}
-
         <div className="lg:col-span-1 space-y-4">
+          {" "}
+          {/* Left Panel Start */}
           {(!gameInitialized || isLoadingMaterials) && (
             <div className="space-y-4">
               <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md space-y-3">
+                {" "}
                 <h2 className="text-md font-semibold text-center text-indigo-300 border-b border-gray-700 pb-2">
                   1. Game Setup & Main Content
-                </h2>
+                </h2>{" "}
+                {/* Game Mode, Group Name, Main Material Upload */}{" "}
                 {!isLoadingMaterials && (
                   <div className="mb-2">
                     {" "}
@@ -1629,7 +1938,7 @@ export default function REQSIM() {
                       </button>{" "}
                     </div>{" "}
                   </div>
-                )}
+                )}{" "}
                 {gameMode === "multiplayer" && !isLoadingMaterials && (
                   <div className="mb-2">
                     {" "}
@@ -1648,8 +1957,9 @@ export default function REQSIM() {
                       placeholder="e.g., CS401_GroupAlpha"
                     />{" "}
                   </div>
-                )}
+                )}{" "}
                 <div className="pt-2">
+                  {" "}
                   <label
                     htmlFor="mainMaterialInputButton"
                     className="block text-xs font-medium text-gray-300 mb-1.5"
@@ -1658,7 +1968,7 @@ export default function REQSIM() {
                     {isCrossDomain
                       ? "Primary Content (Optional)"
                       : "Main Course Material *"}{" "}
-                  </label>
+                  </label>{" "}
                   <div
                     className={`p-3 bg-gray-700/40 rounded-md border-2 border-dashed border-blue-500/70 transition-all ${
                       isLoadingMaterials
@@ -1673,6 +1983,7 @@ export default function REQSIM() {
                     onDragOver={handleMainDragOver}
                     onDragLeave={handleMainDragLeave}
                   >
+                    {" "}
                     <input
                       type="file"
                       ref={mainMaterialInputRef}
@@ -1680,7 +1991,7 @@ export default function REQSIM() {
                       className="hidden"
                       disabled={isLoadingMaterials}
                       accept=".txt,.pdf,.pptx,.ppt"
-                    />
+                    />{" "}
                     <div className="flex items-center text-xs text-blue-300 justify-center">
                       {" "}
                       <IconFolder />{" "}
@@ -1690,20 +2001,23 @@ export default function REQSIM() {
                           ? `File: ${mainMaterialFile.name}`
                           : mainMaterialUploadStatus}{" "}
                       </span>{" "}
-                    </div>
-                  </div>
-                </div>
+                    </div>{" "}
+                  </div>{" "}
+                </div>{" "}
               </div>
               <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md space-y-3">
+                {" "}
                 <h2 className="text-md font-semibold text-center text-sky-300 border-b border-gray-700 pb-2">
                   {" "}
                   2. Scenario Customization{" "}
-                </h2>
+                </h2>{" "}
+                {/* Domain Context Text, File, Cross-Domain Checkbox */}{" "}
                 <div>
+                  {" "}
                   <label className="block text-xs font-medium text-gray-300 mb-1">
                     {" "}
                     Domain-Specific Context (Optional):{" "}
-                  </label>
+                  </label>{" "}
                   <textarea
                     value={domainContextText}
                     onChange={(e) => {
@@ -1718,7 +2032,7 @@ export default function REQSIM() {
                     disabled={isLoadingMaterials}
                     placeholder="Type domain details (e.g., healthcare project specifics)..."
                     className="w-full h-20 bg-gray-700/40 border border-gray-600/50 text-gray-200 text-xs rounded-md p-2 focus:ring-sky-500 focus:border-sky-500 resize-none mb-1"
-                  />
+                  />{" "}
                   <div
                     className={`p-3 bg-gray-700/40 rounded-md border-2 border-dashed border-sky-500/70 transition-all ${
                       isLoadingMaterials
@@ -1733,6 +2047,7 @@ export default function REQSIM() {
                     onDragOver={handleDomainContextDragOver}
                     onDragLeave={handleDomainContextDragLeave}
                   >
+                    {" "}
                     <input
                       type="file"
                       ref={domainContextFileInputRef}
@@ -1740,7 +2055,7 @@ export default function REQSIM() {
                       className="hidden"
                       disabled={isLoadingMaterials}
                       accept=".txt,.pdf,.pptx,.ppt"
-                    />
+                    />{" "}
                     <div className="flex items-center text-xs text-sky-300 justify-center">
                       {" "}
                       <IconFolder />{" "}
@@ -1750,11 +2065,13 @@ export default function REQSIM() {
                           ? `Context File: ${domainContextFile.name}`
                           : domainContextFileStatus}{" "}
                       </span>{" "}
-                    </div>
-                  </div>
-                </div>
+                    </div>{" "}
+                  </div>{" "}
+                </div>{" "}
                 <div className="pt-2">
+                  {" "}
                   <div className="flex items-center">
+                    {" "}
                     <input
                       type="checkbox"
                       id="crossDomainCheckboxCombined"
@@ -1762,16 +2079,16 @@ export default function REQSIM() {
                       onChange={(e) => setIsCrossDomain(e.target.checked)}
                       className="h-3.5 w-3.5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-600 bg-gray-700"
                       disabled={isLoadingMaterials}
-                    />
+                    />{" "}
                     <label
                       htmlFor="crossDomainCheckboxCombined"
                       className="ml-2 text-xs text-gray-300 select-none"
                     >
                       {" "}
                       Generate General / Cross-Domain Content{" "}
-                    </label>
-                  </div>
-                </div>
+                    </label>{" "}
+                  </div>{" "}
+                </div>{" "}
               </div>
               <button
                 onClick={triggerContentGeneration}
@@ -1810,7 +2127,7 @@ export default function REQSIM() {
                   <IconPlusCircle />
                 )}{" "}
                 {isLoadingMaterials ? "Processing..." : "Generate Game Content"}{" "}
-              </button>
+              </button>{" "}
               {isLoadingMaterials && (
                 <p className="text-xs text-center text-blue-300 mt-2">
                   {uploadStatus}
@@ -1818,15 +2135,15 @@ export default function REQSIM() {
               )}
             </div>
           )}
-
           {gameInitialized &&
             !isLoadingMaterials &&
             materialsForDisplay.length > 0 && (
               <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg shadow-md">
+                {" "}
                 <h3 className="text-sm font-semibold mb-1 text-blue-300 flex items-center">
                   {" "}
                   <IconBeaker /> Active Content Drivers{" "}
-                </h3>
+                </h3>{" "}
                 {materialsForDisplay.map((fileInfo, i) => (
                   <div
                     key={i}
@@ -1843,31 +2160,32 @@ export default function REQSIM() {
                       <span className="text-gray-400">({fileInfo.type})</span>{" "}
                     </span>{" "}
                   </div>
-                ))}
+                ))}{" "}
                 <div className="mt-2 text-xs text-gray-400">
                   {" "}
                   Content Focus:{" "}
                   {isCrossDomain
                     ? "Cross-Domain"
                     : "Requirements Engineering"}{" "}
-                </div>
+                </div>{" "}
                 <div className="mt-1 text-xs text-gray-400">
                   {" "}
                   Game Mode:{" "}
                   {gameMode === "multiplayer"
                     ? `Group (${groupName || "Unnamed"})`
                     : "Single Player"}{" "}
-                </div>
+                </div>{" "}
               </div>
             )}
-
           {gameInitialized && concepts.length > 0 ? (
             <>
+              {" "}
               <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg border border-indigo-500/70 shadow-md">
+                {" "}
                 <h2 className="text-lg font-semibold mb-2 flex items-center text-indigo-300">
                   {" "}
                   <IconClipboardList /> Current Scenario{" "}
-                </h2>
+                </h2>{" "}
                 {currentScenario ? (
                   <motion.div
                     key={
@@ -1889,26 +2207,27 @@ export default function REQSIM() {
                     }}
                     whileTap={{ scale: 0.99, cursor: "grabbing" }}
                   >
+                    {" "}
                     <div className="flex items-start mb-1.5">
                       {" "}
                       <IconDragHandle />{" "}
                       <p className="text-sm font-medium text-gray-100 leading-normal">
                         {currentScenario.text}
                       </p>{" "}
-                    </div>
+                    </div>{" "}
                     <div className="mt-2 text-xs text-indigo-300">
                       {" "}
                       Relates to: {
                         currentScenario.conceptIds.length
                       } concept(s){" "}
-                    </div>
+                    </div>{" "}
                     {currentScenario.conceptIds.length > 1 && (
                       <div className="text-xs text-green-400 mt-0.5">
                         {" "}
                         Found: {resolvedConceptsForCurrentScenario.size} /{" "}
                         {currentScenario.conceptIds.length}{" "}
                       </div>
-                    )}
+                    )}{" "}
                     <div className="mt-1.5 text-xs text-blue-300 flex items-center justify-between">
                       {" "}
                       <span>Difficulty:</span>{" "}
@@ -1937,7 +2256,7 @@ export default function REQSIM() {
                             </svg>
                           ))}{" "}
                       </span>{" "}
-                    </div>
+                    </div>{" "}
                     <div className="mt-3 pt-2 border-t border-gray-600/50">
                       {" "}
                       <CountdownTimer
@@ -1946,13 +2265,13 @@ export default function REQSIM() {
                         onTimeUp={handleTimeUp}
                         isPaused={timePaused}
                       />{" "}
-                    </div>
+                    </div>{" "}
                   </motion.div>
-                ) : null /* Modal is shown instead by showReportModal state */}
-              </div>
-
+                ) : null}{" "}
+              </div>{" "}
               {currentScenario && !isCrossDomain && (
                 <div className="bg-gray-800/70 backdrop-blur-sm p-4 rounded-lg border border-green-500/50 shadow-md">
+                  {" "}
                   <div className="flex items-center justify-between mb-3">
                     {" "}
                     <div className="flex items-center">
@@ -1975,7 +2294,7 @@ export default function REQSIM() {
                         emotion={["happy", "neutral", "angry"][npcMood]}
                       />{" "}
                     </div>{" "}
-                  </div>
+                  </div>{" "}
                   <button
                     onClick={getNpcHint}
                     disabled={
@@ -2016,7 +2335,7 @@ export default function REQSIM() {
                     {isLoadingHint
                       ? "The Engineer is Pondering..."
                       : "Ask for Hint (-10pts)"}{" "}
-                  </button>
+                  </button>{" "}
                   {hint && !isLoadingHint && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
@@ -2046,25 +2365,28 @@ export default function REQSIM() {
                         {hint}
                       </p>{" "}
                     </motion.div>
-                  )}
+                  )}{" "}
                 </div>
-              )}
+              )}{" "}
             </>
           ) : (
             !isLoadingMaterials &&
             !gameInitialized && (
               <div className="lg:col-span-4 flex items-center justify-center min-h-[400px] bg-gray-800/50 rounded-lg p-6">
+                {" "}
                 <p className="text-xl text-center text-gray-400">
+                  {" "}
                   Please use the setup panel on the left and click "Generate
-                  Game Content" to start REQSIM!
-                </p>
+                  Game Content" to start REQSIM!{" "}
+                </p>{" "}
               </div>
             )
           )}
-        </div>
-
+        </div>{" "}
+        {/* Left Panel End */}
         {gameInitialized && concepts.length > 0 ? (
           <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {" "}
             {concepts.map((concept) => (
               <motion.div
                 key={concept.id}
@@ -2089,6 +2411,7 @@ export default function REQSIM() {
                 }}
                 layout
               >
+                {" "}
                 <div className="flex items-start justify-between mb-1.5">
                   {" "}
                   <div className="flex-1 pr-2">
@@ -2104,7 +2427,7 @@ export default function REQSIM() {
                     {" "}
                     <EmotionFace emotion={concept.emotion} />{" "}
                   </div>{" "}
-                </div>
+                </div>{" "}
                 {concept.scenarios.length > 0 && (
                   <div className="mt-2 border-t border-gray-700/50 pt-2">
                     {" "}
@@ -2128,21 +2451,25 @@ export default function REQSIM() {
                       ))}{" "}
                     </div>{" "}
                   </div>
-                )}
+                )}{" "}
               </motion.div>
-            ))}
+            ))}{" "}
           </div>
         ) : gameInitialized && concepts.length === 0 && !isLoadingMaterials ? (
           <div className="lg:col-span-3 flex items-center justify-center min-h-[400px]">
+            {" "}
             <p className="text-xl text-gray-500 text-center">
               No concepts or scenarios were generated. <br />
               Please try a different file or adjust its content.
-            </p>
+            </p>{" "}
           </div>
         ) : null}
       </main>
+
+      <SurveyModal />
+
       <GameReportModal
-        isOpen={showReportModal}
+        isOpen={showReportModal && surveySkippedOrCompleted}
         onClose={() => setShowReportModal(false)}
         gameStats={{
           score,
@@ -2162,13 +2489,15 @@ export default function REQSIM() {
         currentScenario &&
         (process.env.NODE_ENV === "development" || true) && (
           <div className="fixed bottom-4 right-4 z-30">
+            {" "}
             <button
               onClick={handleAutoCompleteGame}
               className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold rounded-md shadow-lg"
               title="Auto-completes the current game for testing purposes."
             >
-              Auto-Complete Game (Test)
-            </button>
+              {" "}
+              Auto-Complete Game (Test){" "}
+            </button>{" "}
           </div>
         )}
     </div>
