@@ -2171,7 +2171,7 @@ export default function REQSIM() {
         // onDownloadReport={() => logInteraction("REPORT_DOWNLOADED")}
       />
 
-      {/* Auto-Complete Game Button (for testing) */}
+      {/* Auto-Complete Game Button (for testing)
       {gameInitialized &&
         currentScenario && // Only show if a game is active and there's a scenario
         (process.env.NODE_ENV === "development" || true) && ( // Show in dev mode or if 'true' for testing builds
@@ -2186,7 +2186,7 @@ export default function REQSIM() {
               (Test)
             </button>
           </div>
-        )}
+        )} */}
     </div>
   );
 }
